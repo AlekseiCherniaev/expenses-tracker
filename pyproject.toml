@@ -6,3 +6,15 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.116.1",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "ruff>=0.12.11",
+]
+
+[tool.mypy]
+exclude = 'tests/'
