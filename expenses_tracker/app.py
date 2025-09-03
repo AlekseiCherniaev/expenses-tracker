@@ -1,20 +1,31 @@
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Any
 
+import structlog
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.staticfiles import StaticFiles
 
+from expenses_tracker.logger import prepare_logger
 from expenses_tracker.routers.main_router import public_router, internal_router
+
+logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, Any]:
+    logger.debug("Starting the FastAPI server")
     yield
+    logger.debug("Stopping the FastAPI server")
 
-def use_handler_name_as_unique_id(route: APIRoute):
+
+def use_handler_name_as_unique_id(route: APIRoute) -> str:
     return f"{route.name}"
 
-def init_app():
+
+def init_app() -> FastAPI:
+    prepare_logger(log_level="DEBUG")
+    logger.info("Initializing app")
     app = FastAPI(
         title="Expenses Tracker",
         description="API for Expenses Tracker",
