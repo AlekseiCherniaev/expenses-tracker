@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.116.1",
+    "fastapi>=0.116.1",
+    "orjson>=3.11.3",
+    "structlog>=25.4.0",
+    "uvicorn>=0.35.0",
 ]
 
 [dependency-groups]
