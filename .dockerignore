@@ -1,0 +1,19 @@
+README.md
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/*.py[cod]
+# Git
+.git
+.gitignore
+.gitattributes
+# Docker
+docker-compose.yml
+Dockerfile
+.docker
+.dockerignore
+# PyCharm
+.idea
+# Virtual environment
+.env
+.venv/
+venv/
