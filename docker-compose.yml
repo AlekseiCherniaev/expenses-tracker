@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - common_network
+    ports:
+      - "8000:8000"
+
+networks:
+  common_network:
+    name: common_network
+    driver: bridge

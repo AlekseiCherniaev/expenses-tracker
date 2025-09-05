@@ -6,8 +6,12 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.staticfiles import StaticFiles
 
-from expenses_tracker.logger import prepare_logger
-from expenses_tracker.routers.main_router import public_router, internal_router
+from expenses_tracker.core.logger import prepare_logger
+from expenses_tracker.core.settings import settings
+from expenses_tracker.infrastructure.api.main_router import (
+    public_router,
+    internal_router,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -24,13 +28,14 @@ def use_handler_name_as_unique_id(route: APIRoute) -> str:
 
 
 def init_app() -> FastAPI:
-    prepare_logger(log_level="DEBUG")
+    prepare_logger(log_level=settings.log_level)
     logger.info("Initializing app")
     app = FastAPI(
         title="Expenses Tracker",
         description="API for Expenses Tracker",
         docs_url=None,
         redoc_url=None,
+        debug=settings.fast_api_debug,
         openapi_url="/internal/openapi.json",
         swagger_ui_oauth2_redirect_url="/internal/docs/oauth2-redirect",
         generate_unique_id_function=use_handler_name_as_unique_id,
