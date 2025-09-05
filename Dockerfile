@@ -10,9 +10,5 @@ COPY . /app
 WORKDIR /app
 RUN uv sync --frozen --no-cache
 
-# Add UV virtual environment to PATH
-ENV PATH="/app/.venv/bin:$PATH"
-
 # Run the application.
-ENTRYPOINT [ "uvicorn" ]
-CMD ["expenses_tracker.app:init_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-use-colors"]
+CMD ["/app/.venv/bin/uvicorn", "expenses_tracker.app:init_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-use-colors"]
