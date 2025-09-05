@@ -6,9 +6,12 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.staticfiles import StaticFiles
 
-from expenses_tracker.core.settings import settings
 from expenses_tracker.core.logger import prepare_logger
-from expenses_tracker.routers.main_router import public_router, internal_router
+from expenses_tracker.core.settings import settings
+from expenses_tracker.infrastructure.api.main_router import (
+    public_router,
+    internal_router,
+)
 
 logger = structlog.get_logger(__name__)
 
