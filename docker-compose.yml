@@ -8,6 +8,8 @@ services:
       - common_network
     ports:
       - "8000:8000"
+    env_file:
+      - .env
 
 networks:
   common_network:
