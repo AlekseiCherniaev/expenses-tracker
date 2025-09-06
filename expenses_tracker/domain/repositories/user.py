@@ -4,9 +4,13 @@ from uuid import UUID
 from expenses_tracker.domain.entities.user import User
 
 
-class UserRepository(ABC):
+class IUserRepository(ABC):
     @abstractmethod
     async def get_by_id(self, user_id: UUID) -> User | None:
+        pass
+
+    @abstractmethod
+    async def get_by_username(self, username: str) -> User | None:
         pass
 
     @abstractmethod
