@@ -1,0 +1,64 @@
+from uuid import UUID
+
+import structlog
+
+from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO
+from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
+from expenses_tracker.domain.entities.user import User
+from expenses_tracker.domain.exceptions import UserAlreadyExists, UserNotFound
+from expenses_tracker.domain.repositories.user import IUserRepository
+
+logger = structlog.get_logger(__name__)
+
+
+class UserUseCases:
+    def __init__(
+        self, user_repository: IUserRepository, password_hasher: IPasswordHasher
+    ):
+        self.user_repository = user_repository
+        self.password_hasher = password_hasher
+
+    async def get_user(self, user_id: UUID) -> UserDTO | None:
+        user = await self.user_repository.get_by_id(user_id=user_id)
+        if not user:
+            raise UserNotFound(f"User with id {user_id} not found")
+        logger.bind(user=user).debug("Retrieved user from repo")
+        return UserDTO(
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            id=user.id,
+        )
+
+    async def create_user(self, user_data: UserCreateDTO) -> UserDTO:
+        await self._validate_user_uniqueness(
+            email=user_data.email, username=user_data.username
+        )
+        hashed_password = self.password_hasher.hash(password=user_data.password)
+        new_user = User(
+            username=user_data.username,
+            hashed_password=hashed_password,
+            email=user_data.email,
+        )
+        user = await self.user_repository.create(user=new_user)
+        logger.bind(user=user).debug("Created user from repo")
+        return UserDTO(
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            id=user.id,
+        )
+
+    async def _validate_user_uniqueness(
+        self, email: str | None = None, username: str | None = None
+    ) -> None:
+        """Checks if user with given email or username already exists"""
+        if email and await self.user_repository.get_by_email(email):
+            raise UserAlreadyExists(f"User with email {email} already exists")
+
+        if username and await self.user_repository.get_by_username(username):
+            raise UserAlreadyExists(f"User with username {username} already exists")
