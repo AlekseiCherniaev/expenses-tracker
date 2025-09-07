@@ -4,12 +4,13 @@ import structlog
 from fastapi import APIRouter, HTTPException, status
 from starlette.requests import Request
 
-from expenses_tracker.application.dto.user import UserCreateDTO
+from expenses_tracker.application.dto.user import UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.exceptions import UserAlreadyExists, UserNotFound
 from expenses_tracker.infrastructure.api.schemas.user import (
     UserResponse,
     UserCreateRequest,
+    UserUpdateRequest,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -44,3 +45,35 @@ async def create_user(user_data: UserCreateRequest, request: Request) -> UserRes
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     logger.bind(user=user_dto).debug("Created user")
     return UserResponse(**user_dto.__dict__)
+
+
+@router.put("/update")
+async def update_user(user_data: UserUpdateRequest, request: Request) -> UserResponse:
+    logger.bind(user_data=user_data).debug("Updating user...")
+    try:
+        user_use_case: UserUseCases = request.state.user_use_case
+        update_user_dto = UserUpdateDTO(
+            id=user_data.id,
+            is_active=user_data.is_active,
+            email=user_data.email,
+            password=user_data.password,
+        )
+        user_dto = await user_use_case.update_user(user_data=update_user_dto)
+    except UserNotFound as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except UserAlreadyExists as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    logger.bind(user=user_dto).debug("Updated user")
+    return UserResponse(**user_dto.__dict__)
+
+
+@router.delete("/delete/{user_id}")
+async def delete_user(user_id: UUID, request: Request) -> None:
+    logger.bind(user_id=user_id).debug("Deleting user...")
+    try:
+        user_use_case: UserUseCases = request.state.user_use_case
+        await user_use_case.delete_user(user_id=user_id)
+    except UserNotFound as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    logger.bind(user_id=user_id).debug("Deleted user")
+    return None
