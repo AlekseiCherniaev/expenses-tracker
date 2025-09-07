@@ -1,8 +1,9 @@
+from datetime import datetime
 from uuid import UUID
 
 import structlog
 
-from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO
+from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions import UserAlreadyExists, UserNotFound
@@ -62,3 +63,36 @@ class UserUseCases:
 
         if username and await self.user_repository.get_by_username(username):
             raise UserAlreadyExists(f"User with username {username} already exists")
+
+    async def update_user(self, user_data: UserUpdateDTO) -> UserDTO:
+        user = await self.user_repository.get_by_id(user_id=user_data.id)
+        if not user:
+            raise UserNotFound(f"User with id {user_data.id} not found")
+        if user_data.email:
+            await self._validate_user_uniqueness(email=user_data.email)
+            user.email = user_data.email
+        if user_data.is_active:
+            user.is_active = user_data.is_active
+        if user_data.password:
+            user.hashed_password = self.password_hasher.hash(
+                password=user_data.password
+            )
+        user.updated_at = datetime.now()
+        updated_user = await self.user_repository.update(user=user)
+        logger.bind(user=updated_user).debug("Updated user from repo")
+        return UserDTO(
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            id=user.id,
+        )
+
+    async def delete_user(self, user_id: UUID) -> None:
+        user = await self.user_repository.get_by_id(user_id=user_id)
+        if not user:
+            raise UserNotFound(f"User with id {user_id} not found")
+        await self.user_repository.delete(user_id=user_id)
+        logger.bind(user=user).debug("Deleted user from repo")
+        return None

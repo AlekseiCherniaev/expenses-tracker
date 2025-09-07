@@ -25,3 +25,4 @@ class UserUpdateDTO:
     id: UUID
     email: str | None
     password: str | None
+    is_active: bool | None = None
