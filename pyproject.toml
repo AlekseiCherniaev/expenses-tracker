@@ -27,3 +27,7 @@ dev = [
 
 [tool.mypy]
 exclude = 'tests/'
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["**/__pycache__/*"]
