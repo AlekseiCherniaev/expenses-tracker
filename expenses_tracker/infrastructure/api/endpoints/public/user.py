@@ -22,8 +22,8 @@ logger = structlog.get_logger(__name__)
 async def get_user(user_id: UUID, request: Request) -> UserResponse:
     logger.bind(user_id=user_id).debug("Getting user...")
     try:
-        user_use_case: UserUseCases = request.state.user_use_case
-        user_dto = await user_use_case.get_user(user_id=user_id)
+        user_use_cases: UserUseCases = request.state.user_use_cases
+        user_dto = await user_use_cases.get_user(user_id=user_id)
     except UserNotFound as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     logger.bind(user=user_dto).debug("Got user")
@@ -34,13 +34,13 @@ async def get_user(user_id: UUID, request: Request) -> UserResponse:
 async def create_user(user_data: UserCreateRequest, request: Request) -> UserResponse:
     logger.bind(user_data=user_data).debug("Creating user...")
     try:
-        user_use_case: UserUseCases = request.state.user_use_case
+        user_use_cases: UserUseCases = request.state.user_use_cases
         create_user_dto = UserCreateDTO(
             username=user_data.username,
             email=user_data.email,
             password=user_data.password,
         )
-        user_dto = await user_use_case.create_user(user_data=create_user_dto)
+        user_dto = await user_use_cases.create_user(user_data=create_user_dto)
     except UserAlreadyExists as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     logger.bind(user=user_dto).debug("Created user")
@@ -51,14 +51,14 @@ async def create_user(user_data: UserCreateRequest, request: Request) -> UserRes
 async def update_user(user_data: UserUpdateRequest, request: Request) -> UserResponse:
     logger.bind(user_data=user_data).debug("Updating user...")
     try:
-        user_use_case: UserUseCases = request.state.user_use_case
+        user_use_cases: UserUseCases = request.state.user_use_cases
         update_user_dto = UserUpdateDTO(
             id=user_data.id,
             is_active=user_data.is_active,
             email=user_data.email,
             password=user_data.password,
         )
-        user_dto = await user_use_case.update_user(user_data=update_user_dto)
+        user_dto = await user_use_cases.update_user(user_data=update_user_dto)
     except UserNotFound as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except UserAlreadyExists as e:
@@ -71,8 +71,8 @@ async def update_user(user_data: UserUpdateRequest, request: Request) -> UserRes
 async def delete_user(user_id: UUID, request: Request) -> None:
     logger.bind(user_id=user_id).debug("Deleting user...")
     try:
-        user_use_case: UserUseCases = request.state.user_use_case
-        await user_use_case.delete_user(user_id=user_id)
+        user_use_cases: UserUseCases = request.state.user_use_cases
+        await user_use_cases.delete_user(user_id=user_id)
     except UserNotFound as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     logger.bind(user_id=user_id).debug("Deleted user")
