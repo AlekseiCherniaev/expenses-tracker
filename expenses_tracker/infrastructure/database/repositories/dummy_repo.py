@@ -5,62 +5,42 @@ from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.repositories.user import IUserRepository
 
 
-class DummyUserRepository(IUserRepository):
-    async def get_by_id(self, user_id: UUID) -> User | None:
-        return User(
-            username="test",
-            hashed_password="hashed_test",
-            email="testemail@gmail.com",
-            is_active=True,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-        )
+def create_dummy_user() -> User:
+    return User(
+        username="test",
+        hashed_password="hashed_test",
+        email="testemail@gmail.com",
+        is_active=True,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
 
-    async def get_by_email(self, email: str) -> User | None:
-        return None
+
+class DummyUserRepository(IUserRepository):
+    def __init__(self, initial_user: User = create_dummy_user()) -> None:
+        self.users = {}
+        if initial_user:
+            self.users[initial_user.id] = initial_user
+
+    async def get_by_id(self, user_id: UUID) -> User | None:
+        return self.users.get(user_id)
 
     async def get_by_username(self, username: str) -> User | None:
-        return None
+        return next((u for u in self.users.values() if u.username == username), None)
+
+    async def get_by_email(self, email: str) -> User | None:
+        return next((u for u in self.users.values() if u.email == email), None)
 
     async def get_all(self) -> list[User]:
-        return [
-            User(
-                username="test",
-                hashed_password="hashed_test",
-                email="testemail@gmail.com",
-                is_active=True,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
-            ),
-            User(
-                username="test2",
-                hashed_password="hashed_test2",
-                email="testemail2@gmail.com",
-                is_active=True,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
-            ),
-        ]
+        return list(self.users.values())
 
     async def create(self, user: User) -> User:
-        return User(
-            username="test",
-            hashed_password="hashed_test",
-            email="testemail@gmail.com",
-            is_active=True,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-        )
+        self.users[user.id] = user
+        return user
 
     async def update(self, user: User) -> User:
-        return User(
-            username="test",
-            hashed_password="hashed_test",
-            email="testemail@gmail.com",
-            is_active=True,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-        )
+        self.users[user.id] = user
+        return user
 
     async def delete(self, user_id: UUID) -> None:
-        return None
+        self.users.pop(user_id, None)
