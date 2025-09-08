@@ -27,7 +27,7 @@ def test_user_data():
 
 
 @fixture
-def user_one(test_user_data):
+def test_user(test_user_data):
     return User(
         id=test_user_data["id"],
         username=test_user_data["username"],
@@ -40,7 +40,7 @@ def user_one(test_user_data):
 
 
 @fixture
-def user_one_dto(test_user_data):
+def test_user_dto(test_user_data):
     return UserDTO(
         id=test_user_data["id"],
         username=test_user_data["username"],
@@ -52,7 +52,7 @@ def user_one_dto(test_user_data):
 
 
 @fixture
-def fake_user_repo(user_one):
+def fake_user_repo(test_user):
     class FakeUserRepo(IUserRepository):
         def __init__(self, initial_user=None):
             self.users = {}
@@ -84,7 +84,7 @@ def fake_user_repo(user_one):
         async def delete(self, user_id: UUID) -> None:
             self.users.pop(user_id, None)
 
-    return FakeUserRepo(initial_user=user_one)
+    return FakeUserRepo(initial_user=test_user)
 
 
 @fixture
@@ -99,7 +99,7 @@ def fake_password_hasher():
     return FakePasswordHasher()
 
 
-@fixture(autouse=True)
+@fixture
 def user_use_cases(fake_user_repo, fake_password_hasher) -> UserUseCases:
     return UserUseCases(
         user_repository=fake_user_repo, password_hasher=fake_password_hasher
@@ -107,17 +107,17 @@ def user_use_cases(fake_user_repo, fake_password_hasher) -> UserUseCases:
 
 
 class TestUserUseCases:
-    async def test_get_user(self, user_use_cases, user_one, user_one_dto):
-        user = await user_use_cases.get_user(user_id=user_one.id)
+    async def test_get_user(self, user_use_cases, test_user, test_user_dto):
+        user = await user_use_cases.get_user(user_id=test_user.id)
 
         assert isinstance(user, UserDTO)
-        assert user == user_one_dto
+        assert user == test_user_dto
 
     async def test_get_user_not_found(self, user_use_cases):
         with pytest.raises(UserNotFound):
             await user_use_cases.get_user(user_id=uuid4())
 
-    async def test_create_user(self, user_use_cases, user_one_dto):
+    async def test_create_user(self, user_use_cases):
         username = "new_user"
         email = "new@test.com"
         password = "password123"
@@ -178,7 +178,7 @@ class TestUserUseCases:
                 username=test_user_data["username"]
             )
 
-    async def test_update_user(self, user_use_cases, user_one_dto, test_user_data):
+    async def test_update_user(self, user_use_cases, test_user_dto, test_user_data):
         new_email = "new_email@test.com"
 
         user = await user_use_cases.update_user(
