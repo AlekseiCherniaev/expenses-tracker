@@ -23,6 +23,6 @@ class UserCreateDTO:
 @dataclass
 class UserUpdateDTO:
     id: UUID
-    email: str | None
-    password: str | None
+    email: str | None = None
+    password: str | None = None
     is_active: bool | None = None
