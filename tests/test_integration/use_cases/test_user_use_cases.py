@@ -102,7 +102,7 @@ class TestUserUseCasesWithDummyRepo:
         email = "new@test.com"
         assert (
             await user_use_cases._validate_user_uniqueness(
-                username=username, email=email
+                new_username=username, new_email=email
             )
             is None
         )
@@ -111,7 +111,9 @@ class TestUserUseCasesWithDummyRepo:
             UserAlreadyExists,
             match=f"User with username {dummy_user.username} already exists",
         ):
-            await user_use_cases._validate_user_uniqueness(username=dummy_user.username)
+            await user_use_cases._validate_user_uniqueness(
+                new_username=dummy_user.username
+            )
 
     async def test_update_user(self, user_use_cases, dummy_user):
         new_email = "new_email@test.com"

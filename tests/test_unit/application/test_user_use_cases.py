@@ -165,7 +165,7 @@ class TestUserUseCases:
         email = "new@test.com"
         assert (
             await user_use_cases._validate_user_uniqueness(
-                username=username, email=email
+                new_username=username, new_email=email
             )
             is None
         )
@@ -175,7 +175,7 @@ class TestUserUseCases:
             match=f"User with username {test_user_data['username']} already exists",
         ):
             await user_use_cases._validate_user_uniqueness(
-                username=test_user_data["username"]
+                new_username=test_user_data["username"]
             )
 
     async def test_update_user(self, user_use_cases, test_user_dto, test_user_data):
