@@ -1,11 +1,12 @@
-from pydantic import BaseModel, EmailStr
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserResponse(BaseModel):
     id: UUID
-    email: str
+    email: str | None
     is_active: bool
     created_at: datetime
     updated_at: datetime
