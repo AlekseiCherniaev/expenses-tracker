@@ -4,7 +4,6 @@ from uuid import UUID
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.repositories.user import IUserRepository
 
-
 def create_dummy_user() -> User:
     return User(
         username="test",
@@ -14,7 +13,6 @@ def create_dummy_user() -> User:
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
-
 
 class DummyUserRepository(IUserRepository):
     def __init__(self, initial_user: User = create_dummy_user()) -> None:

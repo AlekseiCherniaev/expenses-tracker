@@ -35,7 +35,7 @@ class UserUseCases:
 
     async def create_user(self, user_data: UserCreateDTO) -> UserDTO:
         await self._validate_user_uniqueness(
-            email=user_data.email, username=user_data.username
+            new_email=user_data.email, new_username=user_data.username
         )
         hashed_password = self.password_hasher.hash(password=user_data.password)
         new_user = User(
@@ -55,25 +55,25 @@ class UserUseCases:
         )
 
     async def _validate_user_uniqueness(
-        self, email: str | None = None, username: str | None = None
+        self, new_email: str | None = None, new_username: str | None = None
     ) -> None:
         """Checks if user with given email or username already exists"""
-        if email and await self.user_repository.get_by_email(email):
-            raise UserAlreadyExists(f"User with email {email} already exists")
+        if new_email and await self.user_repository.get_by_email(new_email):
+            raise UserAlreadyExists(f"User with email {new_email} already exists")
 
-        if username and await self.user_repository.get_by_username(username):
-            raise UserAlreadyExists(f"User with username {username} already exists")
+        if new_username and await self.user_repository.get_by_username(new_username):
+            raise UserAlreadyExists(f"User with username {new_username} already exists")
 
     async def update_user(self, user_data: UserUpdateDTO) -> UserDTO:
         user = await self.user_repository.get_by_id(user_id=user_data.id)
         if not user:
             raise UserNotFound(f"User with id {user_data.id} not found")
-        if user_data.email:
-            await self._validate_user_uniqueness(email=user_data.email)
+        if user_data.email and user_data.email != user.email:
+            await self._validate_user_uniqueness(new_email=user_data.email)
             user.email = user_data.email
-        if user_data.is_active:
+        if user_data.is_active is not None:
             user.is_active = user_data.is_active
-        if user_data.password:
+        if user_data.password is not None:
             user.hashed_password = self.password_hasher.hash(
                 password=user_data.password
             )
