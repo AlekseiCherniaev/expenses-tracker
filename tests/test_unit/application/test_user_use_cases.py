@@ -26,14 +26,14 @@ def test_user():
 
 
 @fixture
-def test_user_dto():
+def test_user_dto(test_user):
     return UserDTO(
-        id=UUID("02743205-850f-48de-be93-721ec8aba624"),
-        username="test",
-        email="test@test.com",
-        is_active=False,
-        created_at=datetime(2021, 11, 23, 2, 12, 23),
-        updated_at=datetime(2021, 11, 23, 2, 12, 27),
+        id=test_user.id,
+        username=test_user.username,
+        email=test_user.email,
+        is_active=test_user.is_active,
+        created_at=test_user.created_at,
+        updated_at=test_user.updated_at,
     )
 
 
