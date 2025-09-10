@@ -16,5 +16,8 @@ class Settings(BaseSettings):
     log_level: str = "DEBUG"
     fast_api_debug: bool = False
 
+    app_host: str = "127.0.0.1"
+    app_port: int = 8000
+
 
 settings = Settings()

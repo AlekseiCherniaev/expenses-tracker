@@ -12,11 +12,12 @@ repos:
         args: [ --strict ]
         exclude: "^tests/"
         language: system
-#  - repo: local
-#    hooks:
-#      - id: pytest
-#        name: pytest
-#        entry: pytest
-#        language: system
-#        types: [ python ]
-#        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest tests/test_integration tests/test_unit # without e2e tests
+        language: system
+        types: [ python ]
+        pass_filenames: false
+        stages: [commit]
