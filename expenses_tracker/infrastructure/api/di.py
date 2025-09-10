@@ -7,7 +7,7 @@ from expenses_tracker.infrastructure.security.password_hasher import (
 )
 
 
-async def get_user_use_case() -> UserUseCases:
+async def get_user_use_cases() -> UserUseCases:
     repo = DummyUserRepository()
     password_hasher = BcryptPasswordHasher()
     return UserUseCases(user_repository=repo, password_hasher=password_hasher)

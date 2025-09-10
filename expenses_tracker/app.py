@@ -8,7 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 from expenses_tracker.core.logger import prepare_logger
 from expenses_tracker.core.settings import settings
-from expenses_tracker.infrastructure.api.di import get_user_use_case
+from expenses_tracker.infrastructure.api.di import get_user_use_cases
 from expenses_tracker.infrastructure.api.main_router import (
     public_router,
     internal_router,
@@ -19,9 +19,9 @@ logger = structlog.get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[dict[str, Any], None]:
-    user_use_case = await get_user_use_case()
+    user_use_cases = await get_user_use_cases()
     logger.info("Startup completed")
-    yield {"user_use_case": user_use_case}
+    yield {"user_use_cases": user_use_cases}
     logger.debug("Server stopped")
 
 

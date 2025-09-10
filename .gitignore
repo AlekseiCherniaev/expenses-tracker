@@ -19,3 +19,6 @@ dmypy.json
 .ruff_cache/
 # Pycharm
 .idea/
+# Coverage files
+.coverage
+.coverage.*
