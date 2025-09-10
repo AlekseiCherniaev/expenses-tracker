@@ -7,7 +7,6 @@ class TestBcryptPasswordHasher:
     def test_password_hasher_hash_and_verify(self):
         hasher = BcryptPasswordHasher()
         raw_password = "super-secret"
-
         hashed = hasher.hash(raw_password)
 
         assert hashed != raw_password
