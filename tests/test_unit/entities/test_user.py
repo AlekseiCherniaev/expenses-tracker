@@ -1,12 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-
 from expenses_tracker.domain.entities.user import User
 
 
 class TestUser:
-    def test_user_creation(self):
+    def test_user_creation_success(self):
         username = "testuser"
         hashed_password = "hashedpassword"
 

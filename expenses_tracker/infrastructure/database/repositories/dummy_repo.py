@@ -1,26 +1,12 @@
-from datetime import datetime
 from uuid import UUID
 
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.repositories.user import IUserRepository
 
 
-def create_dummy_user() -> User:
-    return User(
-        username="test",
-        hashed_password="hashed_test",
-        email="testemail@gmail.com",
-        is_active=True,
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-    )
-
-
 class DummyUserRepository(IUserRepository):
-    def __init__(self, initial_user: User = create_dummy_user()) -> None:
-        self.users = {}
-        if initial_user:
-            self.users[initial_user.id] = initial_user
+    def __init__(self) -> None:
+        self.users: dict[UUID, User] = {}
 
     async def get_by_id(self, user_id: UUID) -> User | None:
         return self.users.get(user_id)

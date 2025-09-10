@@ -45,6 +45,11 @@ def user_create_dto(user_entity):
 
 
 @fixture
+def user_update_dto(user_entity):
+    return UserUpdateDTO(id=user_entity.id, email="new_email", password="new_password")
+
+
+@fixture
 def mock_user_repo():
     return AsyncMock(spec=IUserRepository)
 
@@ -164,21 +169,17 @@ class TestUserUseCases:
         mock_password_hasher,
         user_entity,
         user_dto,
+        user_update_dto,
     ):
         mock_user_repo.get_by_id.return_value = user_entity
         mock_user_repo.get_by_email.return_value = None
         mock_user_repo.get_by_username.return_value = None
         mock_user_repo.update.return_value = user_entity
-        new_email = "new_email"
-        user_update_dto = UserUpdateDTO(
-            id=user_entity.id, email=new_email, password="new_password"
-        )
-
         user = await self.user_use_cases.update_user(user_data=user_update_dto)
 
         assert isinstance(user, UserDTO)
         assert user.id == user_dto.id
-        assert user.email == new_email
+        assert user.email == user_update_dto.email
         assert user.is_active == user_dto.is_active
         mock_user_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
         mock_password_hasher.hash.assert_called_once_with(
@@ -186,16 +187,15 @@ class TestUserUseCases:
         )
         mock_user_repo.update.assert_called_once_with(user=user_entity)
 
-    async def test_update_user_not_found(self, mock_user_repo):
+    async def test_update_user_not_found(self, mock_user_repo, user_update_dto):
         mock_user_repo.get_by_id.return_value = None
+        user_update_dto.id = random_uuid
 
         with pytest.raises(UserNotFound):
-            await self.user_use_cases.update_user(
-                UserUpdateDTO(id=random_uuid, email="new_email@test.com")
-            )
+            await self.user_use_cases.update_user(user_update_dto)
         mock_user_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
 
-    async def test_delete_user(self, mock_user_repo, user_entity):
+    async def test_delete_user_success(self, mock_user_repo, user_entity):
         mock_user_repo.get_by_id.return_value = user_entity
         mock_user_repo.delete.return_value = None
         await self.user_use_cases.delete_user(user_id=user_entity.id)
