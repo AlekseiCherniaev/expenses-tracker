@@ -1,5 +1,6 @@
 from datetime import datetime
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4, UUID
 
 import pytest
 from pytest_asyncio import fixture
@@ -13,192 +14,191 @@ from expenses_tracker.domain.repositories.user import IUserRepository
 
 
 @fixture
-def test_user_data():
-    return {
-        "id": UUID("a050493d-ed7a-4316-8f2a-77a2edc0a0c2"),
-        "username": "test_username",
-        "email": "test_email@test.com",
-        "password": "test",
-        "hashed_password": "hash_test",
-        "is_active": True,
-        "created_at": datetime(year=2001, month=4, day=23, second=23),
-        "updated_at": datetime(year=2001, month=4, day=24, second=23),
-    }
-
-
-@fixture
-def test_user(test_user_data):
+def test_user():
     return User(
-        id=test_user_data["id"],
-        username=test_user_data["username"],
-        hashed_password=test_user_data["hashed_password"],
-        email=test_user_data["email"],
-        is_active=test_user_data["is_active"],
-        created_at=test_user_data["created_at"],
-        updated_at=test_user_data["updated_at"],
+        id=UUID("02743205-850f-48de-be93-721ec8aba624"),
+        username="test",
+        email="test@test.com",
+        hashed_password="hashed_password",
+        created_at=datetime(2021, 11, 23, 2, 12, 23),
+        updated_at=datetime(2021, 11, 23, 2, 12, 27),
     )
 
 
 @fixture
-def test_user_dto(test_user_data):
+def test_user_dto():
     return UserDTO(
-        id=test_user_data["id"],
-        username=test_user_data["username"],
-        email=test_user_data["email"],
-        is_active=test_user_data["is_active"],
-        created_at=test_user_data["created_at"],
-        updated_at=test_user_data["updated_at"],
+        id=UUID("02743205-850f-48de-be93-721ec8aba624"),
+        username="test",
+        email="test@test.com",
+        is_active=False,
+        created_at=datetime(2021, 11, 23, 2, 12, 23),
+        updated_at=datetime(2021, 11, 23, 2, 12, 27),
     )
 
 
 @fixture
-def fake_user_repo(test_user):
-    class FakeUserRepo(IUserRepository):
-        def __init__(self, initial_user=None):
-            self.users = {}
-            if initial_user:
-                self.users[initial_user.id] = initial_user
-
-        async def get_by_id(self, user_id: UUID) -> User | None:
-            return self.users.get(user_id)
-
-        async def get_by_username(self, username: str) -> User | None:
-            return next(
-                (u for u in self.users.values() if u.username == username), None
-            )
-
-        async def get_by_email(self, email: str) -> User | None:
-            return next((u for u in self.users.values() if u.email == email), None)
-
-        async def create(self, user: User) -> User:
-            self.users[user.id] = user
-            return user
-
-        async def get_all(self) -> list[User]:
-            return list(self.users.values())
-
-        async def update(self, user: User) -> User:
-            self.users[user.id] = user
-            return user
-
-        async def delete(self, user_id: UUID) -> None:
-            self.users.pop(user_id, None)
-
-    return FakeUserRepo(initial_user=test_user)
+def mock_user_repo():
+    return AsyncMock(spec=IUserRepository)
 
 
 @fixture
-def fake_password_hasher():
-    class FakePasswordHasher(IPasswordHasher):
-        def hash(self, password: str) -> str:
-            return f"hash_{password}"
-
-        def verify(self, password: str, hashed: str) -> bool:
-            return password == hashed.removeprefix("hash_")
-
-    return FakePasswordHasher()
+def mock_password_hasher():
+    mock_hasher = Mock(spec=IPasswordHasher)
+    mock_hasher.hash.return_value = "hashed_password"
+    mock_hasher.verify.return_value = True
+    return mock_hasher
 
 
-@fixture
-def user_use_cases(fake_user_repo, fake_password_hasher) -> UserUseCases:
-    return UserUseCases(
-        user_repository=fake_user_repo, password_hasher=fake_password_hasher
-    )
+@fixture(autouse=True)
+def random_uuid():
+    return uuid4()
 
 
 class TestUserUseCases:
-    async def test_get_user(self, user_use_cases, test_user, test_user_dto):
-        user = await user_use_cases.get_user(user_id=test_user.id)
+    @fixture(autouse=True)
+    def setup(self, mock_user_repo, mock_password_hasher):
+        self.user_use_cases = UserUseCases(
+            user_repository=mock_user_repo, password_hasher=mock_password_hasher
+        )
+        self.mock_repo = mock_user_repo
+        self.mock_hasher = mock_password_hasher
+
+    async def test_get_user_success(self, mock_user_repo, test_user, test_user_dto):
+        mock_user_repo.get_by_id.return_value = test_user
+        user = await self.user_use_cases.get_user(user_id=test_user.id)
 
         assert isinstance(user, UserDTO)
         assert user == test_user_dto
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=test_user.id)
 
-    async def test_get_user_not_found(self, user_use_cases):
+    async def test_get_user_not_found(self, mock_user_repo):
+        mock_user_repo.get_by_id.return_value = None
+
         with pytest.raises(UserNotFound):
-            await user_use_cases.get_user(user_id=uuid4())
+            await self.user_use_cases.get_user(user_id=random_uuid)
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
 
-    async def test_create_user(self, user_use_cases):
-        username = "new_user"
-        email = "new@test.com"
-        password = "password123"
+    async def test__validate_user_uniqueness(self, mock_user_repo, test_user):
+        mock_user_repo.get_by_email.return_value = None
+        mock_user_repo.get_by_username.return_value = None
 
-        user = await user_use_cases.create_user(
-            user_data=UserCreateDTO(username=username, email=email, password=password)
-        )
-
-        assert isinstance(user, UserDTO)
-        assert user.username == username
-        assert user.email == email
-
-    async def test_create_user_with_existing_username(
-        self, user_use_cases, test_user_data
-    ):
-        with pytest.raises(
-            UserAlreadyExists,
-            match=f"User with username {test_user_data['username']} already exists",
-        ):
-            await user_use_cases.create_user(
-                user_data=UserCreateDTO(
-                    username=test_user_data["username"],
-                    email="new@test.com",
-                    password="password123",
-                )
-            )
-
-    async def test_create_user_with_existing_email(
-        self, user_use_cases, test_user_data
-    ):
-        with pytest.raises(
-            UserAlreadyExists,
-            match=f"User with email {test_user_data['email']} already exists",
-        ):
-            await user_use_cases.create_user(
-                user_data=UserCreateDTO(
-                    username="new_user",
-                    email=test_user_data["email"],
-                    password="password123",
-                )
-            )
-
-    async def test__validate_user_uniqueness(self, user_use_cases, test_user_data):
-        username = "new_user"
-        email = "new@test.com"
         assert (
-            await user_use_cases._validate_user_uniqueness(
-                new_username=username, new_email=email
+            await self.user_use_cases._validate_user_uniqueness(
+                new_username=test_user.username, new_email=test_user.email
             )
             is None
         )
+        mock_user_repo.get_by_email.assert_called_once_with(test_user.email)
+
+        mock_user_repo.get_by_username.return_value = test_user
 
         with pytest.raises(
             UserAlreadyExists,
-            match=f"User with username {test_user_data['username']} already exists",
+            match=f"User with username {test_user.username} already exists",
         ):
-            await user_use_cases._validate_user_uniqueness(
-                new_username=test_user_data["username"]
+            await self.user_use_cases._validate_user_uniqueness(
+                new_username=test_user.username
             )
+        mock_user_repo.get_by_email.assert_called_once_with(test_user.email)
+        mock_user_repo.get_by_username.assert_called_with(test_user.username)
 
-    async def test_update_user(self, user_use_cases, test_user_dto, test_user_data):
-        new_email = "new_email@test.com"
-
-        user = await user_use_cases.update_user(
-            UserUpdateDTO(id=test_user_data["id"], email=new_email)
+    async def test_create_user_success(
+        self,
+        mock_user_repo,
+        mock_password_hasher,
+        test_user,
+        test_user_dto,
+    ):
+        mock_user_repo.get_by_email.return_value = None
+        mock_user_repo.get_by_username.return_value = None
+        mock_user_repo.create.return_value = test_user
+        user_create_dto = UserCreateDTO(
+            username=test_user.username, email=test_user.email, password="new_password"
         )
+        user = await self.user_use_cases.create_user(user_data=user_create_dto)
 
         assert isinstance(user, UserDTO)
-        assert user.email == new_email
+        assert user == test_user_dto
+        mock_user_repo.create.assert_called_once()
+        mock_password_hasher.hash.assert_called_once_with(password="new_password")
 
-    async def test_update_user_not_found(self, user_use_cases):
-        with pytest.raises(UserNotFound):
-            await user_use_cases.update_user(
-                UserUpdateDTO(id=uuid4(), email="new_email@test.com")
+    @pytest.mark.parametrize(
+        "existing_field, none_field, error_message",
+        [
+            (
+                "get_by_username",
+                "get_by_email",
+                "User with username test already exists",
+            ),
+            (
+                "get_by_email",
+                "get_by_username",
+                "User with email test@test.com already exists",
+            ),
+        ],
+    )
+    async def test_create_user_conflicts(
+        self, mock_user_repo, test_user, existing_field, none_field, error_message
+    ):
+        getattr(mock_user_repo, existing_field).return_value = test_user
+        getattr(mock_user_repo, none_field).return_value = None
+
+        with pytest.raises(UserAlreadyExists, match=error_message):
+            await self.user_use_cases.create_user(
+                UserCreateDTO(
+                    username=test_user.username,
+                    email=test_user.email,
+                    password="new_password",
+                )
             )
 
-    async def test_delete_user(self, user_use_cases, test_user_data):
-        await user_use_cases.delete_user(user_id=test_user_data["id"])
+    async def test_update_user_success(
+        self,
+        mock_user_repo,
+        mock_password_hasher,
+        test_user,
+        test_user_dto,
+    ):
+        mock_user_repo.get_by_id.return_value = test_user
+        mock_user_repo.get_by_email.return_value = None
+        mock_user_repo.get_by_username.return_value = None
+        mock_user_repo.update.return_value = test_user
+        new_email = "new_email"
+        user_update_dto = UserUpdateDTO(
+            id=test_user.id, email=new_email, password="new_password"
+        )
 
-        assert user_use_cases.user_repository.users == {}
+        user = await self.user_use_cases.update_user(user_data=user_update_dto)
 
-    async def test_delete_user_not_found(self, user_use_cases):
+        assert isinstance(user, UserDTO)
+        assert user.id == test_user_dto.id
+        assert user.email == new_email
+        assert user.is_active == test_user_dto.is_active
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=test_user.id)
+        mock_password_hasher.hash.assert_called_once_with(password="new_password")
+        mock_user_repo.update.assert_called_once()
+
+    async def test_update_user_not_found(self, mock_user_repo):
+        mock_user_repo.get_by_id.return_value = None
+
         with pytest.raises(UserNotFound):
-            await user_use_cases.delete_user(user_id=uuid4())
+            await self.user_use_cases.update_user(
+                UserUpdateDTO(id=random_uuid, email="new_email@test.com")
+            )
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
+
+    async def test_delete_user(self, mock_user_repo, test_user):
+        mock_user_repo.get_by_id.return_value = test_user
+        mock_user_repo.delete.return_value = None
+        await self.user_use_cases.delete_user(user_id=test_user.id)
+
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=test_user.id)
+        mock_user_repo.delete.assert_called_once_with(user_id=test_user.id)
+
+    async def test_delete_user_not_found(self, mock_user_repo):
+        mock_user_repo.get_by_id.return_value = None
+
+        with pytest.raises(UserNotFound):
+            await self.user_use_cases.delete_user(user_id=random_uuid)
+        mock_user_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
