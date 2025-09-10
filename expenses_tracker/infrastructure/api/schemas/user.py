@@ -6,7 +6,8 @@ from pydantic import BaseModel, EmailStr
 
 class UserResponse(BaseModel):
     id: UUID
-    email: str | None
+    username: str
+    email: str | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
