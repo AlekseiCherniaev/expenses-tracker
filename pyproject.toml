@@ -1,9 +1,11 @@
 [project]
 name = "expenses-tracker"
 version = "0.1.0"
-description = "Add your description here"
+description = "Expenses tracker API"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.16.5",
+    "asyncpg>=0.30.0",
     "bcrypt>=4.3.0",
     "fastapi>=0.116.1",
     "orjson>=3.11.3",
@@ -11,6 +13,7 @@ dependencies = [
     "pydantic[email]>=2.11.7",
     "sqlalchemy>=2.0.43",
     "structlog>=25.4.0",
+    "toml>=0.10.2",
     "uvicorn>=0.35.0",
 ]
 
