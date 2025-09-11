@@ -24,14 +24,12 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres_container
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
+    env_file:
+      - .env.prod
     deploy:
       resources:
         limits:
@@ -46,6 +44,17 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+    networks:
+      - common_network
+
+  migrations:
+    build: .
+    command: ["/app/.venv/bin/alembic", "upgrade", "head"]
+    env_file:
+      - .env.prod
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - common_network
 
