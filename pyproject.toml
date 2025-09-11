@@ -29,6 +29,7 @@ dev = [
     "pytest-cov>=6.3.0",
     "pytest-mock>=3.15.0",
     "ruff>=0.12.11",
+    "types-toml>=0.10.8.20240310",
 ]
 
 [tool.mypy]

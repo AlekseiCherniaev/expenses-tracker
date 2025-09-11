@@ -3,11 +3,11 @@ from typing import AsyncGenerator, Any
 
 import structlog
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
 from starlette.staticfiles import StaticFiles
 
 from expenses_tracker.core.logger import prepare_logger
 from expenses_tracker.core.settings import settings
+from expenses_tracker.core.utils import use_handler_name_as_unique_id
 from expenses_tracker.infrastructure.api.di import get_user_use_cases
 from expenses_tracker.infrastructure.api.main_router import (
     public_router,
@@ -25,16 +25,13 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[dict[str, Any], None]:
     logger.debug("Server stopped")
 
 
-def use_handler_name_as_unique_id(route: APIRoute) -> str:
-    return f"{route.name}"
-
-
 def init_app() -> FastAPI:
     prepare_logger(log_level=settings.log_level)
     logger.info("Initializing app")
     app = FastAPI(
-        title="Expenses Tracker",
-        description="API for Expenses Tracker",
+        title=settings.project_name,
+        description=settings.project_description,
+        version=settings.project_version,
         docs_url=None,
         redoc_url=None,
         debug=settings.fast_api_debug,
