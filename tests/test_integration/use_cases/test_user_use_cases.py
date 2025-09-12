@@ -8,8 +8,8 @@ from expenses_tracker.application.dto.user import UserCreateDTO, UserDTO, UserUp
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions import UserNotFound, UserAlreadyExists
-from expenses_tracker.infrastructure.database.repositories.dummy_repo import (
-    DummyUserRepository,
+from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
+    DummyUnitOfWork,
 )
 from expenses_tracker.infrastructure.security.password_hasher import (
     BcryptPasswordHasher,
@@ -49,7 +49,7 @@ def user_dto(user_entity):
     )
 
 
-@pytest.fixture
+@fixture
 def user_create_dto(user_entity):
     return UserCreateDTO(
         username=user_entity.username,
@@ -63,22 +63,22 @@ def user_update_dto(user_entity):
     return UserUpdateDTO(id=user_entity.id, email="new_email")
 
 
-@pytest.fixture(params=["dummy"])
-def user_repo(request):
-    match request.param:
-        case "dummy":
-            return DummyUserRepository()
-        case _:
-            raise ValueError(f"Unknown repo {request.param}")
-
-
-@pytest.fixture(params=["bcrypt_hasher"])
+@fixture(params=["bcrypt_hasher"])
 def password_hasher(request):
     match request.param:
         case "bcrypt_hasher":
             return BcryptPasswordHasher()
         case _:
             raise ValueError(f"Unknown password_hasher {request.param}")
+
+
+@fixture(params=["dummy"])
+def unit_of_work(request):
+    match request.param:
+        case "dummy":
+            return DummyUnitOfWork()
+        case _:
+            raise ValueError(f"Unknown repo {request.param}")
 
 
 @fixture(autouse=True)
@@ -88,15 +88,15 @@ def random_uuid():
 
 class TestUserUseCases:
     @fixture(autouse=True)
-    def setup(self, user_repo, password_hasher):
+    def setup(self, unit_of_work, password_hasher):
         self.user_use_cases = UserUseCases(
-            user_repository=user_repo, password_hasher=password_hasher
+            unit_of_work=unit_of_work, password_hasher=password_hasher
         )
-        self.user_repo = user_repo
+        self.unit_of_work = unit_of_work
         self.password_hasher = password_hasher
 
     async def _create_user(self, user_entity):
-        return await self.user_repo.create(user_entity)
+        return await self.unit_of_work.user_repository.create(user_entity)
 
     async def test_get_user_success(self, user_entity, user_dto):
         new_user = await self._create_user(user_entity)
@@ -153,7 +153,9 @@ class TestUserUseCases:
     async def test__validate_user_uniqueness(self, user_entity, user_create_dto):
         assert (
             await self.user_use_cases._validate_user_uniqueness(
-                new_username=user_create_dto.username, new_email=user_create_dto.email
+                uow=self.unit_of_work,
+                new_username=user_create_dto.username,
+                new_email=user_create_dto.email,
             )
             is None
         )
@@ -165,7 +167,7 @@ class TestUserUseCases:
             match=f"User with username {user_create_dto.username} already exists",
         ):
             await self.user_use_cases._validate_user_uniqueness(
-                new_username=user_create_dto.username
+                uow=self.unit_of_work, new_username=user_create_dto.username
             )
 
     async def test_update_user_success(self, user_entity_with_times, user_update_dto):
