@@ -8,11 +8,11 @@ from starlette.staticfiles import StaticFiles
 from expenses_tracker.core.logger import prepare_logger
 from expenses_tracker.core.settings import settings
 from expenses_tracker.core.utils import use_handler_name_as_unique_id
-from expenses_tracker.infrastructure.api.di import get_user_use_cases
 from expenses_tracker.infrastructure.api.main_router import (
     public_router,
     internal_router,
 )
+from expenses_tracker.infrastructure.di import get_user_use_cases
 
 logger = structlog.get_logger(__name__)
 
