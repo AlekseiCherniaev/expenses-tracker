@@ -31,6 +31,15 @@ async def get_user(user_id: UUID, request: Request) -> UserResponse:
     return UserResponse(**user_dto.__dict__)
 
 
+@router.get("/get-all")
+async def get_all_users(request: Request) -> list[UserResponse]:
+    logger.debug("Getting all users...")
+    user_use_cases: UserUseCases = request.state.user_use_cases
+    user_dtos = await user_use_cases.get_all_users()
+    logger.bind(user=user_dtos).debug("Got users")
+    return [UserResponse(**user_dto.__dict__) for user_dto in user_dtos]
+
+
 @router.post("/create")
 async def create_user(user_data: UserCreateRequest, request: Request) -> UserResponse:
     logger.bind(user_data=user_data).debug("Creating user...")
