@@ -40,7 +40,11 @@ def init_app() -> FastAPI:
         generate_unique_id_function=use_handler_name_as_unique_id,
         lifespan=lifespan,
     )
-    app.mount("/internal/static", StaticFiles(directory="static"), name="static")
+    app.mount(
+        "/internal/static",
+        StaticFiles(directory=f"{settings.static_url_path}"),
+        name="static",
+    )
     app.include_router(router=public_router)
     app.include_router(router=internal_router)
     return app
