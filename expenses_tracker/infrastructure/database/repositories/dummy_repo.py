@@ -28,5 +28,5 @@ class DummyUserRepository(IUserRepository):
         self.users[user.id] = user
         return user
 
-    async def delete(self, user_id: UUID) -> None:
-        self.users.pop(user_id, None)
+    async def delete(self, user: User) -> None:
+        self.users.pop(user.id, None)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 import structlog
@@ -100,7 +100,7 @@ class UserUseCases:
                 user.hashed_password = self._password_hasher.hash(
                     password=user_data.password
                 )
-            user.updated_at = datetime.now()
+            user.updated_at = datetime.now(timezone.utc)
             updated_user = await uow.user_repository.update(user=user)
             logger.bind(user=updated_user).debug("Updated user from repo")
             return UserDTO(
@@ -118,7 +118,7 @@ class UserUseCases:
             user = await uow.user_repository.get_by_id(user_id=user_id)
             if not user:
                 raise UserNotFound(f"User with id {user_id} not found")
-            await uow.user_repository.delete(user_id=user_id)
+            await uow.user_repository.delete(user=user)
             logger.bind(user=user).debug("Deleted user from repo")
             return None
         assert False, "unreachable"

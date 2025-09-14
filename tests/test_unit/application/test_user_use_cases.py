@@ -1,4 +1,3 @@
-from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
@@ -21,8 +20,6 @@ def user_entity():
         username="test",
         email="test@test.com",
         hashed_password="hashed_password",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
     )
 
 
@@ -68,7 +65,7 @@ def mock_password_hasher(user_entity):
     return mock_hasher
 
 
-@fixture(autouse=True)
+@fixture()
 def random_uuid():
     return uuid4()
 
@@ -91,7 +88,7 @@ class TestUserUseCases:
         assert user == user_dto
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
 
-    async def test_get_user_not_found(self, mock_unit_of_work):
+    async def test_get_user_not_found(self, mock_unit_of_work, random_uuid):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
         mock_repo.get_by_id.return_value = None
 
@@ -202,7 +199,9 @@ class TestUserUseCases:
         )
         mock_repo.update.assert_called_once_with(user=user_entity)
 
-    async def test_update_user_not_found(self, mock_unit_of_work, user_update_dto):
+    async def test_update_user_not_found(
+        self, mock_unit_of_work, user_update_dto, random_uuid
+    ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
         mock_repo.get_by_id.return_value = None
         user_update_dto.id = random_uuid
@@ -218,9 +217,9 @@ class TestUserUseCases:
         await self.user_use_cases.delete_user(user_id=user_entity.id)
 
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
-        mock_repo.delete.assert_called_once_with(user_id=user_entity.id)
+        mock_repo.delete.assert_called_once_with(user=user_entity)
 
-    async def test_delete_user_not_found(self, mock_unit_of_work):
+    async def test_delete_user_not_found(self, mock_unit_of_work, random_uuid):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
         mock_repo.get_by_id.return_value = None
 
