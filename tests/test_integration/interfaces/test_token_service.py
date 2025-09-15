@@ -39,14 +39,14 @@ def test_user():
 
 class TestTokenService:
     def test_create_and_decode_token_success(self, token_service, test_user):
-        token = token_service.create_token(test_user)
+        token = token_service.create_token(str(test_user.id))
 
         assert isinstance(token, str)
         assert len(token) > 0
 
         decoded_payload = token_service.decode_token(token)
 
-        assert decoded_payload.sub == test_user.username
+        assert decoded_payload.sub == str(test_user.id)
         assert datetime.fromtimestamp(decoded_payload.exp, timezone.utc) > datetime.now(
             timezone.utc
         )
@@ -69,7 +69,7 @@ class TestTokenService:
                 "expenses_tracker.infrastructure.security.jwt_token_service.timedelta"
             ) as mock_timedelta:
                 mock_timedelta.return_value = timedelta(minutes=-1)
-                expired_token = token_service.create_token(test_user)
+                expired_token = token_service.create_token(str(test_user.id))
 
         with pytest.raises(jwt.ExpiredSignatureError):
             token_service.decode_token(expired_token)
