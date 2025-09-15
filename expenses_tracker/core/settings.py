@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     @property
     def sync_postgres_url(self) -> str:
         return (
-            f"postgresql+psycopg://"
+            f"postgresql://"
             f"{self.postgres_user}:"
             f"{self.postgres_password}@"
             f"{self.postgres_host}:"

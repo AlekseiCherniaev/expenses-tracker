@@ -3,7 +3,7 @@ from typing import Type
 
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
-from expenses_tracker.infrastructure.database.repositories.dummy_repo import (
+from expenses_tracker.infrastructure.database.repositories.dummy_user_repo import (
     DummyUserRepository,
 )
 
