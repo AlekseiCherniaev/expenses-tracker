@@ -3,7 +3,7 @@ from expenses_tracker.core.settings import get_settings
 from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
     PsycopgUnitOfWork,
 )
-from expenses_tracker.infrastructure.security.password_hasher import (
+from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
 

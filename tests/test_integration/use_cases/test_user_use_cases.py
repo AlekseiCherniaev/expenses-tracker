@@ -17,7 +17,7 @@ from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
 from expenses_tracker.infrastructure.database.repositories.sqlalchemy_uow import (
     SqlAlchemyUnitOfWork,
 )
-from expenses_tracker.infrastructure.security.password_hasher import (
+from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
 
