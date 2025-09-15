@@ -8,11 +8,16 @@ from starlette.staticfiles import StaticFiles
 from expenses_tracker.core.logger import prepare_logger
 from expenses_tracker.core.settings import get_settings
 from expenses_tracker.core.utils import use_handler_name_as_unique_id
+from expenses_tracker.infrastructure.api.exception_handlers import (
+    register_exception_handlers,
+)
 from expenses_tracker.infrastructure.api.main_router import (
     public_router,
     internal_router,
 )
-from expenses_tracker.infrastructure.di import get_user_use_cases
+from expenses_tracker.infrastructure.di import (
+    get_user_use_cases,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -45,6 +50,7 @@ def init_app() -> FastAPI:
         StaticFiles(directory=f"{get_settings().static_url_path}"),
         name="static",
     )
+    register_exception_handlers(app)
     app.include_router(router=public_router)
     app.include_router(router=internal_router)
     return app
