@@ -17,18 +17,18 @@ async def async_engine(postgres_container):
     engine = create_async_engine(url, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    return engine
-
-
-@fixture
-async def async_session_factory(postgres_container, async_engine):
-    yield async_sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
-    async with async_engine.begin() as conn:
+    yield engine
+    async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
 
 
 @fixture
-async def async_session(async_session_factory, async_engine):
+async def async_session_factory(async_engine):
+    yield async_sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
+
+
+@fixture
+async def async_session(async_session_factory):
     async with async_session_factory() as session:
         yield session
