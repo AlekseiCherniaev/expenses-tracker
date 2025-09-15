@@ -4,7 +4,7 @@ from uuid import UUID
 from pytest_asyncio import fixture
 
 from expenses_tracker.domain.entities.user import User
-from expenses_tracker.infrastructure.database.repositories.dummy_repo import (
+from expenses_tracker.infrastructure.database.repositories.dummy_user_repo import (
     DummyUserRepository,
 )
 from expenses_tracker.infrastructure.database.repositories.sqlalchemy_user_repo import (
