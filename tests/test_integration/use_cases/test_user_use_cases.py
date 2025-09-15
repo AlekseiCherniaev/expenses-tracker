@@ -7,7 +7,7 @@ from pytest_asyncio import fixture
 from expenses_tracker.application.dto.user import UserCreateDTO, UserDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.entities.user import User
-from expenses_tracker.domain.exceptions import UserNotFound, UserAlreadyExists
+from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
     DummyUnitOfWork,
 )

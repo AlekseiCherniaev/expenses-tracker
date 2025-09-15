@@ -8,7 +8,7 @@ from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUp
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.entities.user import User
-from expenses_tracker.domain.exceptions import UserNotFound, UserAlreadyExists
+from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
 

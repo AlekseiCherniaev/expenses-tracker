@@ -6,7 +6,7 @@ from starlette.requests import Request
 
 from expenses_tracker.application.dto.user import UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
-from expenses_tracker.domain.exceptions import UserAlreadyExists, UserNotFound
+from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFound
 from expenses_tracker.infrastructure.api.schemas.user import (
     UserResponse,
     UserCreateRequest,
