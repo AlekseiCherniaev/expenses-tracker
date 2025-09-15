@@ -1,23 +1,72 @@
+from functools import lru_cache
 from pathlib import Path
 
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-env_dir = Path(__file__).parent.parent.parent
+from expenses_tracker.core.constants import Environment
+from expenses_tracker.core.utils import get_project_config
+
+base_dir = Path(__file__).parent.parent.parent
+
+project_config = get_project_config(base_dir=base_dir)
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        frozen=True,
-        env_file=env_dir / ".env",
+        extra="ignore",
+        env_file=base_dir / ".env",
         env_file_encoding="utf-8",
     )
 
+    project_name: str = project_config.get("name", "")
+    project_version: str = project_config.get("version", "")
+    project_description: str = project_config.get("description", "")
+    static_url_path: Path = base_dir / "static"
+
+    environment: Environment = Environment.DEV
     log_level: str = "DEBUG"
     fast_api_debug: bool = False
 
     app_host: str = "127.0.0.1"
     app_port: int = 8000
 
+    postgres_host: str = "127.0.0.1"
+    postgres_port: int = 5432
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_db: str = "expenses_tracker"
 
-settings = Settings()
+    database_echo: bool = False
+    database_pool_echo: bool = False
+    pool_size: int = 50
+
+    @computed_field  # type: ignore
+    @property
+    def async_postgres_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.postgres_user}:"
+            f"{self.postgres_password}@"
+            f"{self.postgres_host}:"
+            f"{self.postgres_port}/"
+            f"{self.postgres_db}"
+        )
+
+    @computed_field  # type: ignore
+    @property
+    def sync_postgres_url(self) -> str:
+        return (
+            f"postgresql+psycopg://"
+            f"{self.postgres_user}:"
+            f"{self.postgres_password}@"
+            f"{self.postgres_host}:"
+            f"{self.postgres_port}/"
+            f"{self.postgres_db}"
+        )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
