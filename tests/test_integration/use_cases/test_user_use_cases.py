@@ -11,6 +11,9 @@ from expenses_tracker.domain.exceptions import UserNotFound, UserAlreadyExists
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
     DummyUnitOfWork,
 )
+from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
+    PsycopgUnitOfWork,
+)
 from expenses_tracker.infrastructure.database.repositories.sqlalchemy_uow import (
     SqlAlchemyUnitOfWork,
 )
@@ -84,13 +87,15 @@ def password_hasher(request):
             raise ValueError(f"Unknown password_hasher {request.param}")
 
 
-@fixture(params=["dummy", "sqlalchemy"])
-def unit_of_work(request, async_session_factory):
+@fixture(params=["dummy", "sqlalchemy", "psycopg"])
+def unit_of_work(request, async_session_factory, postgres_container_sync_url):
     match request.param:
         case "dummy":
             return DummyUnitOfWork()
         case "sqlalchemy":
             return SqlAlchemyUnitOfWork(session_factory=async_session_factory)
+        case "psycopg":
+            return PsycopgUnitOfWork(dns=postgres_container_sync_url)
         case _:
             raise ValueError(f"Unknown repo {request.param}")
 
@@ -107,6 +112,7 @@ class TestUserUseCases:
     async def _create_user(self, unique_user_entity):
         async with self.unit_of_work as uow:
             return await uow.user_repository.create(unique_user_entity)
+        return None
 
     async def test_get_user_success(self, unique_user_entity, unique_user_dto):
         new_user = await self._create_user(unique_user_entity)

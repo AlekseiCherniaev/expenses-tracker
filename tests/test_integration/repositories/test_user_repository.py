@@ -7,6 +7,9 @@ from expenses_tracker.domain.entities.user import User
 from expenses_tracker.infrastructure.database.repositories.dummy_user_repo import (
     DummyUserRepository,
 )
+from expenses_tracker.infrastructure.database.repositories.psycopg_user_repo import (
+    PsycopgUserRepository,
+)
 from expenses_tracker.infrastructure.database.repositories.sqlalchemy_user_repo import (
     SQLAlchemyUserRepository,
 )
@@ -22,13 +25,15 @@ def user_entity():
     )
 
 
-@fixture(params=["dummy", "sqlalchemy"])
-def repo(request, async_session):
+@fixture(params=["dummy", "sqlalchemy", "psycopg"])
+def repo(request, async_session, async_connection):
     match request.param:
         case "dummy":
             return DummyUserRepository()
         case "sqlalchemy":
             return SQLAlchemyUserRepository(session=async_session)
+        case "psycopg":
+            return PsycopgUserRepository(conn=async_connection)
         case _:
             raise ValueError(f"Unknown repo {request.param}")
 
