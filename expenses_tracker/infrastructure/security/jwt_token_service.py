@@ -5,6 +5,7 @@ import jwt
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.entities.token_payload import TokenPayload
+from expenses_tracker.domain.exceptions.auth import TokenExpired, InvalidToken
 
 
 class JWTTokenService(ITokenService):
@@ -21,7 +22,14 @@ class JWTTokenService(ITokenService):
         )
 
     def decode_token(self, token: str) -> TokenPayload:
-        payload = jwt.decode(
-            token, get_settings().secret_key, algorithms=[get_settings().algorithm]
-        )
-        return TokenPayload(**payload)
+        try:
+            payload = jwt.decode(
+                token,
+                get_settings().secret_key,
+                algorithms=[get_settings().algorithm],
+            )
+            return TokenPayload(**payload)
+        except jwt.ExpiredSignatureError as e:
+            raise TokenExpired("Token has expired") from e
+        except jwt.InvalidTokenError as e:
+            raise InvalidToken("Invalid token") from e

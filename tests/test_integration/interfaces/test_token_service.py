@@ -2,10 +2,10 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 from uuid import UUID
 
-import jwt
 import pytest
 
 from expenses_tracker.domain.entities.user import User
+from expenses_tracker.domain.exceptions.auth import TokenExpired, InvalidToken
 from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 
@@ -54,7 +54,7 @@ class TestTokenService:
     def test_decode_invalid_token_raises_exception(self, token_service):
         invalid_token = "invalid.token.here"
 
-        with pytest.raises(jwt.InvalidTokenError):
+        with pytest.raises(InvalidToken):
             token_service.decode_token(invalid_token)
 
     def test_decode_expired_token_raises_exception(self, token_service, test_user):
@@ -71,5 +71,5 @@ class TestTokenService:
                 mock_timedelta.return_value = timedelta(minutes=-1)
                 expired_token = token_service.create_token(str(test_user.id))
 
-        with pytest.raises(jwt.ExpiredSignatureError):
+        with pytest.raises(TokenExpired):
             token_service.decode_token(expired_token)
