@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from pytest_asyncio import fixture
@@ -9,20 +9,14 @@ from expenses_tracker.infrastructure.api.schemas.user import (
 )
 
 
-@fixture
-def test_user_data():
-    return {
-        "id": UUID("a050493d-ed7a-4316-8f2a-77a2edc0a0c2"),
-        "username": "test_username",
-        "email": "test_email@test.com",
-        "password": "password123",
-        "is_active": False,
-    }
+@fixture(autouse=True)
+def random_uuid() -> UUID:
+    return uuid4()
 
 
 @fixture
-def unique_user_create_request(test_user_data):
-    uid = uuid4().hex[:6]
+def unique_user_create_request(random_uuid):
+    uid = random_uuid.hex[:6]
     return UserCreateRequest(
         username=f"user_{uid}",
         password="password123",
@@ -31,9 +25,9 @@ def unique_user_create_request(test_user_data):
 
 
 @fixture
-def user_update_request(test_user_data):
+def user_update_request(random_uuid):
     return UserUpdateRequest(
-        id=test_user_data["id"],
+        id=random_uuid,
         password="new_password",
         email="new_email@test.com",
         is_active=True,
@@ -55,37 +49,35 @@ class TestPublicUsersApi:
     async def _create_user(
         self, async_client, user_create_request
     ) -> (dict, datetime, datetime):
-        before_create = datetime.now()
+        before_create = datetime.now(timezone.utc)
         response = await async_client.post(
             "/users/create", json=user_create_request.model_dump()
         )
-        after_create = datetime.now()
+        after_create = datetime.now(timezone.utc)
 
         assert response.status_code == 200
         return response.json(), before_create, after_create
 
     async def test_create_user_success(self, async_client, unique_user_create_request):
-        user, before_create, after_create = await self._create_user(
+        user_create, before_create, after_create = await self._create_user(
             async_client, unique_user_create_request
         )
 
-        assert UUID(user["id"])
-        assert user["username"] == unique_user_create_request.username
-        assert user["email"] == unique_user_create_request.email
-        assert user["is_active"] is False
+        assert UUID(user_create["id"])
+        assert user_create["username"] == unique_user_create_request.username
+        assert user_create["email"] == unique_user_create_request.email
+        assert user_create["is_active"] is False
         assert (
             before_create
-            <= datetime.fromisoformat(user["created_at"])
-            <= datetime.fromisoformat(user["updated_at"])
+            <= datetime.fromisoformat(user_create["created_at"])
+            <= datetime.fromisoformat(user_create["updated_at"])
             <= after_create
         )
 
     async def test_create_user_conflicts(
         self, async_client, unique_user_create_request
     ):
-        # create first user
         await self._create_user(async_client, unique_user_create_request)
-        # conflict by email
         request_conflict_email = unique_user_create_request.model_copy(
             update={"username": "other_username"}
         )
@@ -96,7 +88,6 @@ class TestPublicUsersApi:
         assert response.status_code == 409
         assert "User with email" in response.json()["detail"]
 
-        # conflict by username
         request_conflict_username = unique_user_create_request.model_copy(
             update={"email": "other@test.com"}
         )
@@ -107,13 +98,11 @@ class TestPublicUsersApi:
         assert response.status_code == 409
         assert "User with username" in response.json()["detail"]
 
-    async def test_get_user_success(
-        self, async_client, test_user_data, unique_user_create_request
-    ):
-        user, before_create, after_create = await self._create_user(
+    async def test_get_user_success(self, async_client, unique_user_create_request):
+        user_create, before_create, after_create = await self._create_user(
             async_client, unique_user_create_request
         )
-        user_created_id = user["id"]
+        user_created_id = user_create["id"]
         response = await async_client.get(f"/users/get/{user_created_id}")
         user_get = response.json()
 
@@ -121,11 +110,11 @@ class TestPublicUsersApi:
         assert user_get["id"] == user_created_id
         assert user_get["username"] == unique_user_create_request.username
         assert user_get["email"] == unique_user_create_request.email
-        assert user_get["is_active"] == test_user_data["is_active"]
+        assert user_get["is_active"] is False
         assert (
             before_create
-            <= datetime.fromisoformat(user["created_at"])
-            <= datetime.fromisoformat(user["updated_at"])
+            <= datetime.fromisoformat(user_get["created_at"])
+            <= datetime.fromisoformat(user_get["updated_at"])
             <= after_create
         )
 
@@ -135,46 +124,70 @@ class TestPublicUsersApi:
         assert response.status_code == 404
         assert response.json()["detail"].startswith("User with id")
 
-    async def test_get_all_users(self, async_client, test_user_data):
-        # TODO
-        assert True
+    async def test_get_all_users_success(
+        self, async_client, unique_user_create_request
+    ):
+        user_create, before_create, after_create = await self._create_user(
+            async_client, unique_user_create_request
+        )
+        response = await async_client.get("/users/get-all")
+        users_get = response.json()
+
+        assert response.status_code == 200
+        assert isinstance(users_get, list)
+        created_user = next(
+            user for user in users_get if user["id"] == user_create["id"]
+        )
+        assert created_user is not None
+        assert created_user["id"] == user_create["id"]
+        assert created_user["username"] == unique_user_create_request.username
+        assert created_user["email"] == unique_user_create_request.email
+        assert created_user["is_active"] is False
+        assert (
+            before_create
+            <= datetime.fromisoformat(created_user["created_at"])
+            <= datetime.fromisoformat(created_user["updated_at"])
+            <= after_create
+        )
 
     async def test_update_user_success(
         self,
         async_client,
-        test_user_data,
         unique_user_create_request,
         user_update_request,
     ):
-        user, before_create, after_create = await self._create_user(
+        user_create, before_create, after_create = await self._create_user(
             async_client, unique_user_create_request
         )
-        user_created_id = user["id"]
-        user_update_request.id = user_created_id
-        before_update = datetime.now()
+        user_update_request.id = user_create["id"]
+        before_update = datetime.now(timezone.utc)
         response = await async_client.put(
             "/users/update", json=user_update_request.model_dump()
         )
-        after_update = datetime.now()
-        user = response.json()
+        after_update = datetime.now(timezone.utc)
+        user_update = response.json()
 
         assert response.status_code == 200
-        assert user["id"] == user_created_id
-        assert user["username"] == unique_user_create_request.username
-        assert user["email"] == user_update_request.email
-        assert user["is_active"] == user_update_request.is_active
+        assert user_update["id"] == user_create["id"]
+        assert user_update["username"] == unique_user_create_request.username
+        assert user_update["email"] == user_update_request.email
+        assert user_update["is_active"] == user_update_request.is_active
         assert (
-            before_create <= datetime.fromisoformat(user["created_at"]) <= after_create
+            before_create
+            <= datetime.fromisoformat(user_update["created_at"])
+            <= after_create
         )
         assert (
-            before_update <= datetime.fromisoformat(user["updated_at"]) <= after_update
+            before_update
+            <= datetime.fromisoformat(user_update["updated_at"])
+            <= after_update
         )
 
-    async def test_delete_user_success(
-        self, async_client, test_user_data, unique_user_create_request
-    ):
-        user, _, _ = await self._create_user(async_client, unique_user_create_request)
-        user_created_id = user["id"]
+    async def test_delete_user_success(self, async_client, unique_user_create_request):
+        user_create, _, _ = await self._create_user(
+            async_client, unique_user_create_request
+        )
+        user_created_id = user_create["id"]
         response = await async_client.delete(f"/users/delete/{user_created_id}")
 
         assert response.status_code == 200

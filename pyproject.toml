@@ -1,16 +1,21 @@
 [project]
 name = "expenses-tracker"
 version = "0.1.0"
-description = "Add your description here"
+description = "Expenses tracker API"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.16.5",
+    "asyncpg>=0.30.0",
     "bcrypt>=4.3.0",
     "fastapi>=0.116.1",
     "orjson>=3.11.3",
+    "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.10.1",
     "pydantic[email]>=2.11.7",
-    "sqlalchemy>=2.0.43",
+    "sqlalchemy[asyncio]>=2.0.43",
     "structlog>=25.4.0",
+    "testcontainers>=4.13.0",
+    "toml>=0.10.2",
     "uvicorn>=0.35.0",
 ]
 
@@ -26,6 +31,7 @@ dev = [
     "pytest-cov>=6.3.0",
     "pytest-mock>=3.15.0",
     "ruff>=0.12.11",
+    "types-toml>=0.10.8.20240310",
 ]
 
 [tool.mypy]
