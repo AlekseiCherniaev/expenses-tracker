@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     app_host: str = "127.0.0.1"
     app_port: int = 8000
 
+    secret_key: str = "super-secret"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 3
+
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432
     postgres_user: str = "postgres"
