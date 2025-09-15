@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
 )
 
-from expenses_tracker.core.settings import settings
+from expenses_tracker.core.settings import get_settings
 
 
 class DBEngine(BaseModel, arbitrary_types_allowed=True):
@@ -18,10 +18,10 @@ class DBEngine(BaseModel, arbitrary_types_allowed=True):
 
 def get_db_engines() -> DBEngine:
     async_engine = create_async_engine(
-        settings.async_postgres_url,
-        echo=settings.database_echo,
-        echo_pool=settings.database_pool_echo,
-        pool_size=settings.pool_size,
+        get_settings().async_postgres_url,
+        echo=get_settings().database_echo,
+        echo_pool=get_settings().database_pool_echo,
+        pool_size=get_settings().pool_size,
     )
     async_session_factory = async_sessionmaker(
         bind=async_engine,

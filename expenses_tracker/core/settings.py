@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import computed_field
@@ -14,7 +15,6 @@ project_config = get_project_config(base_dir=base_dir)
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        frozen=True,
         extra="ignore",
         env_file=base_dir / ".env",
         env_file_encoding="utf-8",
@@ -67,4 +67,6 @@ class Settings(BaseSettings):
         )
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

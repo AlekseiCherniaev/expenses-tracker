@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
 from expenses_tracker.core.logger import prepare_logger
-from expenses_tracker.core.settings import settings
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.core.utils import use_handler_name_as_unique_id
 from expenses_tracker.infrastructure.api.main_router import (
     public_router,
@@ -26,15 +26,15 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[dict[str, Any], None]:
 
 
 def init_app() -> FastAPI:
-    prepare_logger(log_level=settings.log_level)
+    prepare_logger(log_level=get_settings().log_level)
     logger.info("Initializing app")
     app = FastAPI(
-        title=settings.project_name,
-        description=settings.project_description,
-        version=settings.project_version,
+        title=get_settings().project_name,
+        description=get_settings().project_description,
+        version=get_settings().project_version,
         docs_url=None,
         redoc_url=None,
-        debug=settings.fast_api_debug,
+        debug=get_settings().fast_api_debug,
         openapi_url="/internal/openapi.json",
         swagger_ui_oauth2_redirect_url="/internal/docs/oauth2-redirect",
         generate_unique_id_function=use_handler_name_as_unique_id,
@@ -42,7 +42,7 @@ def init_app() -> FastAPI:
     )
     app.mount(
         "/internal/static",
-        StaticFiles(directory=f"{settings.static_url_path}"),
+        StaticFiles(directory=f"{get_settings().static_url_path}"),
         name="static",
     )
     app.include_router(router=public_router)

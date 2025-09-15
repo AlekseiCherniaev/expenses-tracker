@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from expenses_tracker.core.settings import settings
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.infrastructure.database.models.base import Base
 
 # this is the Alembic Config object, which provides
@@ -23,7 +23,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
-config.set_main_option("sqlalchemy.url", settings.async_postgres_url)  # type: ignore
+config.set_main_option("sqlalchemy.url", get_settings().async_postgres_url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
