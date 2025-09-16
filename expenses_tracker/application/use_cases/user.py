@@ -6,7 +6,7 @@ import structlog
 from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.domain.entities.user import User
-from expenses_tracker.domain.exceptions import UserAlreadyExists, UserNotFound
+from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFound
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 
 logger = structlog.get_logger(__name__)

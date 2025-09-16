@@ -1,7 +1,4 @@
-class DomainException(Exception):
-    """Base class for domain exceptions."""
-
-    pass
+from expenses_tracker.domain.exceptions.base import DomainException
 
 
 class UserNotFound(DomainException):

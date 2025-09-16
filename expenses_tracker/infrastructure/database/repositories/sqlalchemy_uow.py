@@ -3,9 +3,13 @@ from typing import Callable, Type
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
-from expenses_tracker.infrastructure.database.repositories.sqlalchemy_user_repo import (
+from expenses_tracker.infrastructure.database.repositories.category.sqlalchemy_category_repo import (
+    SQLAlchemyCategoryRepository,
+)
+from expenses_tracker.infrastructure.database.repositories.user.sqlalchemy_user_repo import (
     SQLAlchemyUserRepository,
 )
 
@@ -15,6 +19,7 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
         self._session_factory = session_factory
         self._session: AsyncSession | None = None
         self._user_repository: SQLAlchemyUserRepository | None = None
+        self._category_repository: SQLAlchemyCategoryRepository | None = None
 
     @property
     def user_repository(self) -> IUserRepository:
@@ -22,9 +27,16 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
             raise RuntimeError("Repository accessed outside of UnitOfWork context")
         return self._user_repository
 
+    @property
+    def category_repository(self) -> ICategoryRepository:
+        if not self._category_repository:
+            raise RuntimeError("Repository accessed outside of UnitOfWork context")
+        return self._category_repository
+
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self._session = self._session_factory()
         self._user_repository = SQLAlchemyUserRepository(self._session)
+        self._category_repository = SQLAlchemyCategoryRepository(self._session)
         return self
 
     async def __aexit__(

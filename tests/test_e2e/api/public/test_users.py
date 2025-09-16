@@ -1,194 +1,141 @@
-from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from fastapi import status
 
-from pytest_asyncio import fixture
-
-from expenses_tracker.infrastructure.api.schemas.user import (
-    UserCreateRequest,
-    UserUpdateRequest,
-)
+from expenses_tracker.infrastructure.api.schemas.auth import LoginRequest, TokenResponse
+from expenses_tracker.infrastructure.api.schemas.user import UserResponse
 
 
-@fixture(autouse=True)
-def random_uuid() -> UUID:
-    return uuid4()
-
-
-@fixture
-def unique_user_create_request(random_uuid):
-    uid = random_uuid.hex[:6]
-    return UserCreateRequest(
-        username=f"user_{uid}",
-        password="password123",
-        email=f"user_{uid}@test.com",
-    )
-
-
-@fixture
-def user_update_request(random_uuid):
-    return UserUpdateRequest(
-        id=random_uuid,
-        password="new_password",
-        email="new_email@test.com",
-        is_active=True,
-    )
-
-
-class TestPublicUsersApi:
-    async def test_health(self, async_client):
-        response = await async_client.get("/internal/health")
-
-        assert response.status_code == 200
-        assert response.json() == {"status": "OK"}
-
-    async def test_docs(self, async_client):
-        response = await async_client.get("/internal/docs")
-
-        assert response.status_code == 200
-
-    async def _create_user(
-        self, async_client, user_create_request
-    ) -> (dict, datetime, datetime):
-        before_create = datetime.now(timezone.utc)
-        response = await async_client.post(
-            "/users/create", json=user_create_request.model_dump()
+class TestUserApi:
+    async def _register_user(self, async_client, user_create_request):
+        register_response = await async_client.post(
+            "/auth/register", json=user_create_request.model_dump()
         )
-        after_create = datetime.now(timezone.utc)
+        token_response = TokenResponse(**register_response.json())
+        return token_response.access_token
 
-        assert response.status_code == 200
-        return response.json(), before_create, after_create
+    async def _get_auth_headers(self, access_token):
+        return {"Authorization": f"Bearer {access_token}"}
 
-    async def test_create_user_success(self, async_client, unique_user_create_request):
-        user_create, before_create, after_create = await self._create_user(
-            async_client, unique_user_create_request
-        )
-
-        assert UUID(user_create["id"])
-        assert user_create["username"] == unique_user_create_request.username
-        assert user_create["email"] == unique_user_create_request.email
-        assert user_create["is_active"] is False
-        assert (
-            before_create
-            <= datetime.fromisoformat(user_create["created_at"])
-            <= datetime.fromisoformat(user_create["updated_at"])
-            <= after_create
-        )
-
-    async def test_create_user_conflicts(
+    async def test_get_current_user_success(
         self, async_client, unique_user_create_request
     ):
-        await self._create_user(async_client, unique_user_create_request)
-        request_conflict_email = unique_user_create_request.model_copy(
-            update={"username": "other_username"}
-        )
-        response = await async_client.post(
-            "/users/create", json=request_conflict_email.model_dump()
-        )
-
-        assert response.status_code == 409
-        assert "User with email" in response.json()["detail"]
-
-        request_conflict_username = unique_user_create_request.model_copy(
-            update={"email": "other@test.com"}
-        )
-        response = await async_client.post(
-            "/users/create", json=request_conflict_username.model_dump()
-        )
-
-        assert response.status_code == 409
-        assert "User with username" in response.json()["detail"]
-
-    async def test_get_user_success(self, async_client, unique_user_create_request):
-        user_create, before_create, after_create = await self._create_user(
+        access_token = await self._register_user(
             async_client, unique_user_create_request
         )
-        user_created_id = user_create["id"]
-        response = await async_client.get(f"/users/get/{user_created_id}")
-        user_get = response.json()
+        headers = await self._get_auth_headers(access_token)
+        response = await async_client.get("/users/me", headers=headers)
+        user_response = UserResponse(**response.json())
 
-        assert response.status_code == 200
-        assert user_get["id"] == user_created_id
-        assert user_get["username"] == unique_user_create_request.username
-        assert user_get["email"] == unique_user_create_request.email
-        assert user_get["is_active"] is False
-        assert (
-            before_create
-            <= datetime.fromisoformat(user_get["created_at"])
-            <= datetime.fromisoformat(user_get["updated_at"])
-            <= after_create
-        )
+        assert response.status_code == status.HTTP_200_OK
+        assert user_response.username == unique_user_create_request.username
+        assert user_response.email == unique_user_create_request.email
+        assert user_response.is_active is False
 
-    async def test_get_user_not_found(self, async_client):
-        response = await async_client.get(f"/users/get/{uuid4()}")
+    async def test_get_current_user_unauthorized(self, async_client):
+        response = await async_client.get("/users/me")
 
-        assert response.status_code == 404
-        assert response.json()["detail"].startswith("User with id")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_get_all_users_success(
-        self, async_client, unique_user_create_request
+    async def test_get_current_user_invalid_token(self, async_client):
+        headers = {"Authorization": "Bearer invalid_token"}
+        response = await async_client.get("/users/me", headers=headers)
+
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_400_BAD_REQUEST,
+        ]
+
+    async def test_update_current_user_success(
+        self, async_client, unique_user_create_request, user_update_request
     ):
-        user_create, before_create, after_create = await self._create_user(
+        access_token = await self._register_user(
             async_client, unique_user_create_request
         )
-        response = await async_client.get("/users/get-all")
-        users_get = response.json()
-
-        assert response.status_code == 200
-        assert isinstance(users_get, list)
-        created_user = next(
-            user for user in users_get if user["id"] == user_create["id"]
+        headers = await self._get_auth_headers(access_token)
+        user_update_request.id = str(user_update_request.id)
+        response = await async_client.put(
+            "/users/update", json=user_update_request.model_dump(), headers=headers
         )
-        assert created_user is not None
-        assert created_user["id"] == user_create["id"]
-        assert created_user["username"] == unique_user_create_request.username
-        assert created_user["email"] == unique_user_create_request.email
-        assert created_user["is_active"] is False
-        assert (
-            before_create
-            <= datetime.fromisoformat(created_user["created_at"])
-            <= datetime.fromisoformat(created_user["updated_at"])
-            <= after_create
-        )
+        user_response = UserResponse(**response.json())
 
-    async def test_update_user_success(
-        self,
-        async_client,
-        unique_user_create_request,
-        user_update_request,
+        assert response.status_code == status.HTTP_200_OK
+        assert user_response.email == user_update_request.email
+        assert user_response.is_active == user_update_request.is_active
+        assert user_response.username == unique_user_create_request.username
+
+        get_response = await async_client.get("/users/me", headers=headers)
+        updated_user = UserResponse(**get_response.json())
+
+        assert updated_user.email == user_update_request.email
+        assert updated_user.is_active == user_update_request.is_active
+
+    async def test_update_current_user_unauthorized(
+        self, async_client, user_update_request
     ):
-        user_create, before_create, after_create = await self._create_user(
-            async_client, unique_user_create_request
-        )
-        user_update_request.id = user_create["id"]
-        before_update = datetime.now(timezone.utc)
+        user_update_request.id = str(user_update_request.id)
         response = await async_client.put(
             "/users/update", json=user_update_request.model_dump()
         )
-        after_update = datetime.now(timezone.utc)
-        user_update = response.json()
 
-        assert response.status_code == 200
-        assert user_update["id"] == user_create["id"]
-        assert user_update["username"] == unique_user_create_request.username
-        assert user_update["email"] == user_update_request.email
-        assert user_update["is_active"] == user_update_request.is_active
-        assert (
-            before_create
-            <= datetime.fromisoformat(user_update["created_at"])
-            <= after_create
-        )
-        assert (
-            before_update
-            <= datetime.fromisoformat(user_update["updated_at"])
-            <= after_update
-        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_delete_user_success(self, async_client, unique_user_create_request):
-        user_create, _, _ = await self._create_user(
+    async def test_delete_current_user_success(
+        self, async_client, unique_user_create_request
+    ):
+        access_token = await self._register_user(
             async_client, unique_user_create_request
         )
-        user_created_id = user_create["id"]
-        response = await async_client.delete(f"/users/delete/{user_created_id}")
+        headers = await self._get_auth_headers(access_token)
+        response = await async_client.delete("/users/delete", headers=headers)
 
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         assert response.json() is None
+
+        get_response = await async_client.get("/users/me", headers=headers)
+
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+        login_response = await async_client.post(
+            "/auth/login",
+            json=LoginRequest(
+                username=unique_user_create_request.username,
+                password=unique_user_create_request.password,
+            ).model_dump(),
+        )
+
+        assert login_response.status_code == status.HTTP_404_NOT_FOUND
+
+    async def test_delete_current_user_unauthorized(self, async_client):
+        response = await async_client.delete("/users/delete")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    async def test_full_user_lifecycle(
+        self, async_client, unique_user_create_request, user_update_request
+    ):
+        access_token = await self._register_user(
+            async_client, unique_user_create_request
+        )
+        headers = await self._get_auth_headers(access_token)
+        get_response = await async_client.get("/users/me", headers=headers)
+        original_user = UserResponse(**get_response.json())
+
+        assert get_response.status_code == status.HTTP_200_OK
+
+        user_update_request.id = str(user_update_request.id)
+        update_response = await async_client.put(
+            "/users/update", json=user_update_request.model_dump(), headers=headers
+        )
+        updated_user = UserResponse(**update_response.json())
+
+        assert update_response.status_code == status.HTTP_200_OK
+        assert updated_user.email == user_update_request.email
+        assert updated_user.is_active == user_update_request.is_active
+        assert updated_user.username == original_user.username
+
+        delete_response = await async_client.delete("/users/delete", headers=headers)
+
+        assert delete_response.status_code == status.HTTP_200_OK
+
+        final_get_response = await async_client.get("/users/me", headers=headers)
+
+        assert final_get_response.status_code == status.HTTP_404_NOT_FOUND
