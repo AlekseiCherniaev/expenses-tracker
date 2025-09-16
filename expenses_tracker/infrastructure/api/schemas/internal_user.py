@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
 
-class UserResponse(BaseModel):
+class InternalUserResponse(BaseModel):
     id: UUID
     username: str
     email: str | None = None
@@ -13,13 +13,13 @@ class UserResponse(BaseModel):
     updated_at: datetime
 
 
-class UserCreateRequest(BaseModel):
+class InternalUserCreateRequest(BaseModel):
     username: str
     email: EmailStr | None = None
     password: str
 
 
-class UserUpdateRequest(BaseModel):
+class InternalUserUpdateRequest(BaseModel):
     id: UUID
     email: EmailStr | None = None
     password: str | None = None

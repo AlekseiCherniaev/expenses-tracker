@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class CategoryResponse(BaseModel):
+class InternalCategoryResponse(BaseModel):
     id: UUID
     user_id: UUID
     name: str
@@ -15,7 +15,7 @@ class CategoryResponse(BaseModel):
     updated_at: datetime
 
 
-class CategoryCreateRequest(BaseModel):
+class InternalCategoryCreateRequest(BaseModel):
     name: str
     user_id: UUID
     description: str | None = None
@@ -23,7 +23,7 @@ class CategoryCreateRequest(BaseModel):
     color: str
 
 
-class CategoryUpdateRequest(BaseModel):
+class InternalCategoryUpdateRequest(BaseModel):
     id: UUID
     name: str | None = None
     description: str | None = None

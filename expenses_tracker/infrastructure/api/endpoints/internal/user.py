@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends
 from expenses_tracker.application.dto.user import UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.infrastructure.api.schemas.internal_user import (
-    UserResponse,
-    UserCreateRequest,
-    UserUpdateRequest,
+    InternalUserResponse,
+    InternalUserCreateRequest,
+    InternalUserUpdateRequest,
 )
 from expenses_tracker.infrastructure.di import get_user_use_cases
 
@@ -21,28 +21,28 @@ logger = structlog.get_logger(__name__)
 async def get_internal_user(
     user_id: UUID,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
-) -> UserResponse:
+) -> InternalUserResponse:
     logger.bind(user_id=user_id).debug("Getting user...")
     user_dto = await user_use_cases.get_user(user_id=user_id)
     logger.bind(user=user_dto).debug("Got user")
-    return UserResponse(**user_dto.__dict__)
+    return InternalUserResponse(**user_dto.__dict__)
 
 
 @router.get("/get-all")
 async def get_internal_all_users(
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
-) -> list[UserResponse]:
+) -> list[InternalUserResponse]:
     logger.debug("Getting all users...")
     user_dtos = await user_use_cases.get_all_users()
     logger.bind(user=user_dtos).debug("Got users")
-    return [UserResponse(**user_dto.__dict__) for user_dto in user_dtos]
+    return [InternalUserResponse(**user_dto.__dict__) for user_dto in user_dtos]
 
 
 @router.post("/create")
 async def create_internal_user(
-    user_data: UserCreateRequest,
+    user_data: InternalUserCreateRequest,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
-) -> UserResponse:
+) -> InternalUserResponse:
     logger.bind(user_data=user_data).debug("Creating user...")
     create_user_dto = UserCreateDTO(
         username=user_data.username,
@@ -51,14 +51,14 @@ async def create_internal_user(
     )
     user_dto = await user_use_cases.create_user(user_data=create_user_dto)
     logger.bind(user=user_dto).debug("Created user")
-    return UserResponse(**user_dto.__dict__)
+    return InternalUserResponse(**user_dto.__dict__)
 
 
 @router.put("/update")
 async def update_internal_user(
-    user_data: UserUpdateRequest,
+    user_data: InternalUserUpdateRequest,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
-) -> UserResponse:
+) -> InternalUserResponse:
     logger.bind(user_data=user_data).debug("Updating user...")
     update_user_dto = UserUpdateDTO(
         id=user_data.id,
@@ -68,7 +68,7 @@ async def update_internal_user(
     )
     user_dto = await user_use_cases.update_user(user_data=update_user_dto)
     logger.bind(user=user_dto).debug("Updated user")
-    return UserResponse(**user_dto.__dict__)
+    return InternalUserResponse(**user_dto.__dict__)
 
 
 @router.delete("/delete/{user_id}")

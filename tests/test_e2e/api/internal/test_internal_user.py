@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 
-class TestInternalUsersApi:
+class TestInternalUserApi:
     async def test_health(self, async_client):
         response = await async_client.get("/internal/health")
 

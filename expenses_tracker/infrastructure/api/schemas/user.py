@@ -17,3 +17,9 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class UserCreateRequest(BaseModel):
+    username: str
+    email: EmailStr | None = None
+    password: str

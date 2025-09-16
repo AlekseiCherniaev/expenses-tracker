@@ -6,7 +6,7 @@ from expenses_tracker.infrastructure.api.schemas.auth import (
     RefreshRequest,
 )
 from expenses_tracker.infrastructure.api.schemas.internal_user import (
-    UserCreateRequest,
+    InternalUserCreateRequest,
 )
 
 
@@ -30,7 +30,6 @@ class TestAuthApi:
         assert token_response.refresh_token is not None
         assert token_response.token_type == "bearer"
 
-        # Verify user was created by trying to login
         login_response = await async_client.post(
             "/auth/login",
             json=LoginRequest(
@@ -43,13 +42,11 @@ class TestAuthApi:
     async def test_register_user_already_exists(
         self, async_client, unique_user_create_request
     ):
-        # First registration should succeed
         response1 = await async_client.post(
             "/auth/register", json=unique_user_create_request.model_dump()
         )
         assert response1.status_code == status.HTTP_200_OK
 
-        # Second registration with same username should fail
         response2 = await async_client.post(
             "/auth/register", json=unique_user_create_request.model_dump()
         )
@@ -60,11 +57,9 @@ class TestAuthApi:
     async def test_register_conflict_username(
         self, async_client, unique_user_create_request
     ):
-        # Create first user
         await self._register_user(async_client, unique_user_create_request)
 
-        # Try to create user with same username but different email
-        conflict_request = UserCreateRequest(
+        conflict_request = InternalUserCreateRequest(
             username=unique_user_create_request.username,
             password="different_password",
             email="different@test.com",
@@ -80,11 +75,9 @@ class TestAuthApi:
     async def test_register_conflict_email(
         self, async_client, unique_user_create_request
     ):
-        # Create first user
         await self._register_user(async_client, unique_user_create_request)
 
-        # Try to create user with same email but different username
-        conflict_request = UserCreateRequest(
+        conflict_request = InternalUserCreateRequest(
             username="different_username",
             password="different_password",
             email=unique_user_create_request.email,
@@ -100,12 +93,10 @@ class TestAuthApi:
     async def test_login_success(
         self, async_client, unique_user_create_request, login_request
     ):
-        # First register user
         register_tokens = await self._register_user(
             async_client, unique_user_create_request
         )
 
-        # Then login
         response = await async_client.post(
             "/auth/login", json=login_request.model_dump()
         )
@@ -116,8 +107,6 @@ class TestAuthApi:
         assert login_tokens.access_token is not None
         assert login_tokens.refresh_token is not None
         assert login_tokens.token_type == "bearer"
-
-        # Tokens should be different from registration tokens
         assert login_tokens.access_token != register_tokens.access_token
         assert login_tokens.refresh_token != register_tokens.refresh_token
 
@@ -136,10 +125,8 @@ class TestAuthApi:
     async def test_login_invalid_password(
         self, async_client, unique_user_create_request
     ):
-        # Register user first
         await self._register_user(async_client, unique_user_create_request)
 
-        # Try to login with wrong password
         invalid_login = LoginRequest(
             username=unique_user_create_request.username, password="wrong_password"
         )
@@ -176,15 +163,12 @@ class TestAuthApi:
     async def test_refresh_user_not_found(
         self, async_client, unique_user_create_request
     ):
-        # This test is tricky because we need a valid token for a deleted user
-        # For now, we'll test with a malformed token that doesn't correspond to any user
         refresh_request = RefreshRequest(refresh_token="invalid_token_format")
 
         response = await async_client.post(
             "/auth/refresh", json=refresh_request.model_dump()
         )
 
-        # Should return 400 for invalid token format
         assert response.status_code in [
             status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
