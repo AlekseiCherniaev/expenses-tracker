@@ -134,11 +134,24 @@ def unique_user_update_dto(unique_user_entity):
 
 
 @fixture
-def unique_category_entity_with_times(random_uuid, unique_user_entity):
+async def create_test_user(unit_of_work):
+    user = User(
+        username="testuser", email="test@example.com", hashed_password="hashed_password"
+    )
+    async with unit_of_work as uow:
+        created_user = await uow.user_repository.create(user)
+        return created_user
+    return None
+
+
+@fixture
+def unique_category_entity_with_times(
+    random_uuid, unique_user_entity, create_test_user
+):
     before_create = datetime.now(timezone.utc)
     category = Category(
         name=f"category_{random_uuid.hex[:6]}",
-        user_id=unique_user_entity.id,
+        user_id=create_test_user.id,
         color="red",
         description="Test category",
     )
@@ -167,9 +180,9 @@ def unique_category_dto(unique_category_entity):
 
 
 @fixture
-def unique_category_create_dto(unique_user_entity, random_uuid):
+def unique_category_create_dto(create_test_user, random_uuid):
     return CategoryCreateDTO(
-        user_id=unique_user_entity.id,
+        user_id=create_test_user.id,
         name=f"category_{random_uuid.hex[:6]}",
         description="New test category",
         is_default=False,

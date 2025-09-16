@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
-from expenses_tracker.infrastructure.database.repositories.category.dummy_category_repo import (
-    DummyCategoryRepository,
+from expenses_tracker.infrastructure.database.repositories.category.sqlalchemy_category_repo import (
+    SQLAlchemyCategoryRepository,
 )
 from expenses_tracker.infrastructure.database.repositories.user.sqlalchemy_user_repo import (
     SQLAlchemyUserRepository,
@@ -19,7 +19,7 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
         self._session_factory = session_factory
         self._session: AsyncSession | None = None
         self._user_repository: SQLAlchemyUserRepository | None = None
-        self._category_repository = DummyCategoryRepository()
+        self._category_repository: SQLAlchemyCategoryRepository | None = None
 
     @property
     def user_repository(self) -> IUserRepository:
@@ -36,6 +36,7 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self._session = self._session_factory()
         self._user_repository = SQLAlchemyUserRepository(self._session)
+        self._category_repository = SQLAlchemyCategoryRepository(self._session)
         return self
 
     async def __aexit__(

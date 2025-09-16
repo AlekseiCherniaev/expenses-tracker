@@ -18,7 +18,7 @@ logger = structlog.get_logger(__name__)
 
 
 @router.get("/get/{user_id}")
-async def get_user(
+async def get_internal_user(
     user_id: UUID,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> UserResponse:
@@ -29,7 +29,7 @@ async def get_user(
 
 
 @router.get("/get-all")
-async def get_all_users(
+async def get_internal_all_users(
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> list[UserResponse]:
     logger.debug("Getting all users...")
@@ -39,7 +39,7 @@ async def get_all_users(
 
 
 @router.post("/create")
-async def create_user(
+async def create_internal_user(
     user_data: UserCreateRequest,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> UserResponse:
@@ -55,7 +55,7 @@ async def create_user(
 
 
 @router.put("/update")
-async def update_user(
+async def update_internal_user(
     user_data: UserUpdateRequest,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> UserResponse:
@@ -72,7 +72,7 @@ async def update_user(
 
 
 @router.delete("/delete/{user_id}")
-async def delete_user(
+async def delete_internal_user(
     user_id: UUID,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> None:

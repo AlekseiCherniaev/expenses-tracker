@@ -8,6 +8,7 @@ from expenses_tracker.domain.exceptions.auth import (
     InvalidToken,
     Unauthorized,
 )
+from expenses_tracker.domain.exceptions.category import CategoryNotFound
 from expenses_tracker.domain.exceptions.user import (
     UserAlreadyExists,
     UserNotFound,
@@ -16,6 +17,7 @@ from expenses_tracker.domain.exceptions.user import (
 EXCEPTION_STATUS_MAP: dict[type[Exception], int] = {
     UserAlreadyExists: status.HTTP_400_BAD_REQUEST,
     UserNotFound: status.HTTP_404_NOT_FOUND,
+    CategoryNotFound: status.HTTP_404_NOT_FOUND,
     InvalidCredentials: status.HTTP_401_UNAUTHORIZED,
     Unauthorized: status.HTTP_401_UNAUTHORIZED,
     TokenExpired: status.HTTP_401_UNAUTHORIZED,

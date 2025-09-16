@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
+from expenses_tracker.application.use_cases.categories import CategoryUseCases
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
@@ -45,6 +46,12 @@ async def get_user_use_cases(
     uow: IUnitOfWork = Depends(get_psycopg_uow),
 ) -> UserUseCases:
     return UserUseCases(unit_of_work=uow, password_hasher=BcryptPasswordHasher())
+
+
+async def get_category_use_cases(
+    uow: IUnitOfWork = Depends(get_psycopg_uow),
+) -> CategoryUseCases:
+    return CategoryUseCases(unit_of_work=uow)
 
 
 async def get_auth_user_use_cases(
