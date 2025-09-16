@@ -85,7 +85,7 @@ class TestPublicUsersApi:
             "/users/create", json=request_conflict_email.model_dump()
         )
 
-        assert response.status_code == 409
+        assert response.status_code == 400
         assert "User with email" in response.json()["detail"]
 
         request_conflict_username = unique_user_create_request.model_copy(
@@ -95,7 +95,7 @@ class TestPublicUsersApi:
             "/users/create", json=request_conflict_username.model_dump()
         )
 
-        assert response.status_code == 409
+        assert response.status_code == 400
         assert "User with username" in response.json()["detail"]
 
     async def test_get_user_success(self, async_client, unique_user_create_request):
