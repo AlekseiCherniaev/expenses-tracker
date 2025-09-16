@@ -7,7 +7,7 @@ from expenses_tracker.application.dto.category import (
     CategoryCreateDTO,
     CategoryUpdateDTO,
 )
-from expenses_tracker.application.use_cases.categories import CategoryUseCases
+from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.infrastructure.api.schemas.internal_category import (
     InternalCategoryCreateRequest,
     InternalCategoryResponse,

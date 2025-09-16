@@ -3,13 +3,14 @@ from unittest.mock import Mock, patch
 from uuid import UUID
 
 import pytest
+from pytest_asyncio import fixture
 
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.auth import TokenExpired, InvalidToken
 from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 
-@pytest.fixture(params=["jwt_token_service"])
+@fixture(params=["jwt_token_service"])
 def token_service(request):
     with patch("expenses_tracker.core.settings.get_settings") as mock_settings:
         mock_settings.return_value = Mock(
@@ -24,7 +25,7 @@ def token_service(request):
             raise ValueError(f"Unknown token_service {request.param}")
 
 
-@pytest.fixture
+@fixture
 def test_user():
     return User(
         id=UUID("123e4567-e89b-12d3-a456-426614174000"),
