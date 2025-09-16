@@ -19,6 +19,10 @@ from expenses_tracker.infrastructure.database.db import (
     create_psycopg_dsn,
     create_sqlalchemy_engine,
 )
+from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
+    BcryptPasswordHasher,
+)
+from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 logger = structlog.get_logger(__name__)
 
@@ -27,6 +31,8 @@ logger = structlog.get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.sqlalchemy_engine = create_sqlalchemy_engine()
     app.state.psycopg_dsn = create_psycopg_dsn()
+    app.state.token_service = JWTTokenService()
+    app.state.password_hasher = BcryptPasswordHasher()
     logger.info("Startup completed")
     yield
     logger.debug("Server stopped")

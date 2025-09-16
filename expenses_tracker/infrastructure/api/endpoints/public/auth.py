@@ -8,7 +8,7 @@ from expenses_tracker.infrastructure.api.schemas.auth import (
     LoginRequest,
     RefreshRequest,
 )
-from expenses_tracker.infrastructure.api.schemas.user import (
+from expenses_tracker.infrastructure.api.schemas.internal_user import (
     UserCreateRequest,
 )
 from expenses_tracker.infrastructure.di import get_auth_user_use_cases

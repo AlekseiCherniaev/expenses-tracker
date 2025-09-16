@@ -4,12 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
 
-class UserUpdateRequest(BaseModel):
-    email: EmailStr | None = None
-    password: str | None = None
-    is_active: bool | None = None
-
-
 class UserResponse(BaseModel):
     id: UUID
     username: str
@@ -20,3 +14,16 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserCreateRequest(BaseModel):
+    username: str
+    email: EmailStr | None = None
+    password: str
+
+
+class UserUpdateRequest(BaseModel):
+    id: UUID
+    email: EmailStr | None = None
+    password: str | None = None
+    is_active: bool | None = None
