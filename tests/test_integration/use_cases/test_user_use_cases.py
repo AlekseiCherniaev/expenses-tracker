@@ -20,7 +20,6 @@ class TestUserUseCases:
     async def _create_user(self, unique_user_entity):
         async with self.unit_of_work as uow:
             return await uow.user_repository.create(unique_user_entity)
-        return None
 
     async def test_get_user_success(self, unique_user_entity, unique_user_dto):
         new_user = await self._create_user(unique_user_entity)

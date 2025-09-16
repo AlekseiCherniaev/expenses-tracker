@@ -6,7 +6,13 @@ from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from testcontainers.postgres import PostgresContainer
 
+from expenses_tracker.application.dto.category import (
+    CategoryDTO,
+    CategoryCreateDTO,
+    CategoryUpdateDTO,
+)
 from expenses_tracker.application.dto.user import UserDTO, UserUpdateDTO, UserCreateDTO
+from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.infrastructure.database.models import Base
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
@@ -124,6 +130,61 @@ def unique_user_update_dto(unique_user_entity):
         password="new_password",
         email="new_email@test.com",
         is_active=True,
+    )
+
+
+@fixture
+def unique_category_entity_with_times(random_uuid, unique_user_entity):
+    before_create = datetime.now(timezone.utc)
+    category = Category(
+        name=f"category_{random_uuid.hex[:6]}",
+        user_id=unique_user_entity.id,
+        color="red",
+        description="Test category",
+    )
+    after_create = datetime.now(timezone.utc)
+    return category, before_create, after_create
+
+
+@fixture
+def unique_category_entity(unique_category_entity_with_times):
+    category, _, _ = unique_category_entity_with_times
+    return category
+
+
+@fixture
+def unique_category_dto(unique_category_entity):
+    return CategoryDTO(
+        id=unique_category_entity.id,
+        name=unique_category_entity.name,
+        user_id=unique_category_entity.user_id,
+        description=unique_category_entity.description,
+        is_default=unique_category_entity.is_default,
+        color=unique_category_entity.color,
+        created_at=unique_category_entity.created_at,
+        updated_at=unique_category_entity.updated_at,
+    )
+
+
+@fixture
+def unique_category_create_dto(unique_user_entity, random_uuid):
+    return CategoryCreateDTO(
+        user_id=unique_user_entity.id,
+        name=f"category_{random_uuid.hex[:6]}",
+        description="New test category",
+        is_default=False,
+        color="blue",
+    )
+
+
+@fixture
+def unique_category_update_dto(unique_category_entity):
+    return CategoryUpdateDTO(
+        id=unique_category_entity.id,
+        name="updated_name",
+        color="green",
+        is_default=True,
+        description="Updated description",
     )
 
 

@@ -6,10 +6,10 @@ from psycopg import AsyncConnection
 from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
-from expenses_tracker.infrastructure.database.repositories.dummy_category_repo import (
+from expenses_tracker.infrastructure.database.repositories.category.dummy_category_repo import (
     DummyCategoryRepository,
 )
-from expenses_tracker.infrastructure.database.repositories.psycopg_user_repo import (
+from expenses_tracker.infrastructure.database.repositories.user.psycopg_user_repo import (
     PsycopgUserRepository,
 )
 

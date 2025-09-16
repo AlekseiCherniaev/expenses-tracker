@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.infrastructure.database.models.base import Base
+
+if TYPE_CHECKING:
+    from expenses_tracker.infrastructure.database.models.category import CategoryModel
 
 
 class UserModel(Base):
@@ -16,6 +21,10 @@ class UserModel(Base):
         String(254), nullable=True, unique=True, index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    categories: Mapped[list["CategoryModel"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", passive_deletes=True
+    )
 
     def to_entity(self) -> User:
         return User(

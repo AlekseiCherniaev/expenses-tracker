@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
-from expenses_tracker.infrastructure.database.repositories.dummy_category_repo import (
+from expenses_tracker.infrastructure.database.repositories.category.dummy_category_repo import (
     DummyCategoryRepository,
 )
-from expenses_tracker.infrastructure.database.repositories.sqlalchemy_user_repo import (
+from expenses_tracker.infrastructure.database.repositories.user.sqlalchemy_user_repo import (
     SQLAlchemyUserRepository,
 )
 
