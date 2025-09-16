@@ -3,6 +3,7 @@ from types import TracebackType
 from typing import Type
 
 from expenses_tracker.domain.repositories.category import ICategoryRepository
+from expenses_tracker.domain.repositories.expense import IExpenseRepository
 from expenses_tracker.domain.repositories.user import IUserRepository
 
 
@@ -15,6 +16,11 @@ class IUnitOfWork(ABC):
     @property
     @abstractmethod
     def category_repository(self) -> ICategoryRepository:
+        pass
+
+    @property
+    @abstractmethod
+    def expense_repository(self) -> IExpenseRepository:
         pass
 
     @abstractmethod
