@@ -15,18 +15,20 @@ from expenses_tracker.infrastructure.api.main_router import (
     public_router,
     internal_router,
 )
-from expenses_tracker.infrastructure.di import (
-    get_user_use_cases,
+from expenses_tracker.infrastructure.database.db import (
+    create_psycopg_dsn,
+    create_sqlalchemy_engine,
 )
 
 logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[dict[str, Any], None]:
-    user_use_cases = await get_user_use_cases()
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+    app.state.sqlalchemy_engine = create_sqlalchemy_engine()
+    app.state.psycopg_dsn = create_psycopg_dsn()
     logger.info("Startup completed")
-    yield {"user_use_cases": user_use_cases}
+    yield
     logger.debug("Server stopped")
 
 
