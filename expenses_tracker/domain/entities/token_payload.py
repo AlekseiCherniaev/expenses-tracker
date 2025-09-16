@@ -5,3 +5,5 @@ from dataclasses import dataclass
 class TokenPayload:
     sub: str
     exp: float
+    iat: float
+    jti: str

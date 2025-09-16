@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 import jwt
 
@@ -10,11 +11,17 @@ from expenses_tracker.domain.exceptions.auth import TokenExpired, InvalidToken
 
 class JWTTokenService(ITokenService):
     def create_token(self, subject: str, expires_delta: timedelta | None = None) -> str:
+        now = datetime.now(timezone.utc)
         expire = datetime.now(timezone.utc) + (
             expires_delta
             or timedelta(minutes=get_settings().access_token_expire_minutes)
         )
-        payload = {"sub": subject, "exp": expire}
+        payload = {
+            "sub": subject,
+            "exp": expire,
+            "iat": now,
+            "jti": str(uuid4()),
+        }
         return jwt.encode(
             payload,
             get_settings().secret_key,
