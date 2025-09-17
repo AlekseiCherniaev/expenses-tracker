@@ -3,10 +3,14 @@ from typing import Type
 
 from psycopg import AsyncConnection
 
+from expenses_tracker.domain.repositories.budget import IBudgetRepository
 from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.expense import IExpenseRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
+from expenses_tracker.infrastructure.database.repositories.budget.psycopg_budget_repo import (
+    PsycopgBudgetRepository,
+)
 from expenses_tracker.infrastructure.database.repositories.category.psycopg_category_repo import (
     PsycopgCategoryRepository,
 )
@@ -24,6 +28,7 @@ class PsycopgUnitOfWork(IUnitOfWork):
         self._user_repository: PsycopgUserRepository | None = None
         self._category_repository: PsycopgCategoryRepository | None = None
         self._expense_repository: PsycopgExpenseRepository | None = None
+        self._budget_repository: PsycopgBudgetRepository | None = None
 
     @property
     def user_repository(self) -> IUserRepository:
@@ -42,6 +47,12 @@ class PsycopgUnitOfWork(IUnitOfWork):
         if not self._expense_repository:
             raise RuntimeError("Repository accessed outside of UnitOfWork context")
         return self._expense_repository
+
+    @property
+    def budget_repository(self) -> IBudgetRepository:
+        if not self._budget_repository:
+            raise RuntimeError("Repository accessed outside of UnitOfWork context")
+        return self._budget_repository
 
     async def __aenter__(self) -> "PsycopgUnitOfWork":
         self._conn = await AsyncConnection.connect(self.dns)

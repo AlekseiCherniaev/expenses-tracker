@@ -3,10 +3,14 @@ from typing import Callable, Type
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from expenses_tracker.domain.repositories.budget import IBudgetRepository
 from expenses_tracker.domain.repositories.category import ICategoryRepository
 from expenses_tracker.domain.repositories.expense import IExpenseRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
+from expenses_tracker.infrastructure.database.repositories.budget.sqlalchemy_budget_repo import (
+    SQLAlchemyBudgetRepository,
+)
 from expenses_tracker.infrastructure.database.repositories.category.sqlalchemy_category_repo import (
     SQLAlchemyCategoryRepository,
 )
@@ -25,6 +29,7 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
         self._user_repository: SQLAlchemyUserRepository | None = None
         self._category_repository: SQLAlchemyCategoryRepository | None = None
         self._expense_repository: SQLAlchemyExpenseRepository | None = None
+        self._budget_repository: SQLAlchemyBudgetRepository | None = None
 
     @property
     def user_repository(self) -> IUserRepository:
@@ -44,11 +49,18 @@ class SqlAlchemyUnitOfWork(IUnitOfWork):
             raise RuntimeError("Repository accessed outside of UnitOfWork context")
         return self._expense_repository
 
+    @property
+    def budget_repository(self) -> IBudgetRepository:
+        if not self._budget_repository:
+            raise RuntimeError("Repository accessed outside of UnitOfWork context")
+        return self._budget_repository
+
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self._session = self._session_factory()
         self._user_repository = SQLAlchemyUserRepository(self._session)
         self._category_repository = SQLAlchemyCategoryRepository(self._session)
         self._expense_repository = SQLAlchemyExpenseRepository(self._session)
+        self._budget_repository = SQLAlchemyBudgetRepository(self._session)
         return self
 
     async def __aexit__(
