@@ -6,7 +6,7 @@ from pytest import fixture
 from expenses_tracker.application.dto.category import (
     CategoryDTO,
 )
-from expenses_tracker.application.use_cases.categories import CategoryUseCases
+from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.exceptions.category import CategoryNotFound
 

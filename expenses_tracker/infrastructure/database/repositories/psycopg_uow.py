@@ -3,11 +3,19 @@ from typing import Type
 
 from psycopg import AsyncConnection
 
+from expenses_tracker.domain.repositories.budget import IBudgetRepository
 from expenses_tracker.domain.repositories.category import ICategoryRepository
+from expenses_tracker.domain.repositories.expense import IExpenseRepository
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.domain.repositories.user import IUserRepository
+from expenses_tracker.infrastructure.database.repositories.budget.psycopg_budget_repo import (
+    PsycopgBudgetRepository,
+)
 from expenses_tracker.infrastructure.database.repositories.category.psycopg_category_repo import (
     PsycopgCategoryRepository,
+)
+from expenses_tracker.infrastructure.database.repositories.expense.psycopg_expense_repo import (
+    PsycopgExpenseRepository,
 )
 from expenses_tracker.infrastructure.database.repositories.user.psycopg_user_repo import (
     PsycopgUserRepository,
@@ -19,6 +27,8 @@ class PsycopgUnitOfWork(IUnitOfWork):
         self.dns: str = dns
         self._user_repository: PsycopgUserRepository | None = None
         self._category_repository: PsycopgCategoryRepository | None = None
+        self._expense_repository: PsycopgExpenseRepository | None = None
+        self._budget_repository: PsycopgBudgetRepository | None = None
 
     @property
     def user_repository(self) -> IUserRepository:
@@ -32,10 +42,24 @@ class PsycopgUnitOfWork(IUnitOfWork):
             raise RuntimeError("Repository accessed outside of UnitOfWork context")
         return self._category_repository
 
+    @property
+    def expense_repository(self) -> IExpenseRepository:
+        if not self._expense_repository:
+            raise RuntimeError("Repository accessed outside of UnitOfWork context")
+        return self._expense_repository
+
+    @property
+    def budget_repository(self) -> IBudgetRepository:
+        if not self._budget_repository:
+            raise RuntimeError("Repository accessed outside of UnitOfWork context")
+        return self._budget_repository
+
     async def __aenter__(self) -> "PsycopgUnitOfWork":
         self._conn = await AsyncConnection.connect(self.dns)
         self._user_repository = PsycopgUserRepository(conn=self._conn)
         self._category_repository = PsycopgCategoryRepository(conn=self._conn)
+        self._expense_repository = PsycopgExpenseRepository(conn=self._conn)
+        self._budget_repository = PsycopgBudgetRepository(conn=self._conn)
         return self
 
     async def __aexit__(

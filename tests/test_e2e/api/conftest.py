@@ -11,10 +11,10 @@ from expenses_tracker.infrastructure.api.schemas.category import (
     CategoryCreateRequest,
     CategoryUpdateRequest,
 )
-from expenses_tracker.infrastructure.api.schemas.internal_category import (
+from expenses_tracker.infrastructure.api.schemas.category import (
     InternalCategoryCreateRequest,
 )
-from expenses_tracker.infrastructure.api.schemas.internal_user import (
+from expenses_tracker.infrastructure.api.schemas.user import (
     InternalUserCreateRequest,
     InternalUserUpdateRequest,
 )
