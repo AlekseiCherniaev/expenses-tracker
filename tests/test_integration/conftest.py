@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4, UUID
 
 from psycopg import AsyncConnection
@@ -6,6 +6,11 @@ from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from testcontainers.postgres import PostgresContainer
 
+from expenses_tracker.application.dto.budget import (
+    BudgetUpdateDTO,
+    BudgetCreateDTO,
+    BudgetDTO,
+)
 from expenses_tracker.application.dto.category import (
     CategoryDTO,
     CategoryCreateDTO,
@@ -17,6 +22,8 @@ from expenses_tracker.application.dto.expense import (
     ExpenseDTO,
 )
 from expenses_tracker.application.dto.user import UserDTO, UserUpdateDTO, UserCreateDTO
+from expenses_tracker.core.constants import BudgetPeriod
+from expenses_tracker.domain.entities.budget import Budget
 from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.entities.expense import Expense
 from expenses_tracker.domain.entities.user import User
@@ -279,6 +286,68 @@ async def create_test_category(unit_of_work, create_test_user):
         created_category = await uow.category_repository.create(category)
         return created_category
     return None
+
+
+@fixture
+def unique_budget_entity_with_times(
+    random_uuid, create_test_user, create_test_category
+):
+    before_create = datetime.now(timezone.utc)
+    budget = Budget(
+        amount=1000.0,
+        period=BudgetPeriod.MONTHLY,
+        start_date=datetime.now(),
+        end_date=datetime.now() + timedelta(days=30),
+        user_id=create_test_user.id,
+        category_id=create_test_category.id,
+    )
+    after_create = datetime.now(timezone.utc)
+    return budget, before_create, after_create
+
+
+@fixture
+def unique_budget_entity(unique_budget_entity_with_times):
+    budget, _, _ = unique_budget_entity_with_times
+    return budget
+
+
+@fixture
+def unique_budget_dto(unique_budget_entity):
+    return BudgetDTO(
+        id=unique_budget_entity.id,
+        amount=unique_budget_entity.amount,
+        period=unique_budget_entity.period,
+        start_date=unique_budget_entity.start_date,
+        end_date=unique_budget_entity.end_date,
+        user_id=unique_budget_entity.user_id,
+        category_id=unique_budget_entity.category_id,
+        created_at=unique_budget_entity.created_at,
+        updated_at=unique_budget_entity.updated_at,
+    )
+
+
+@fixture
+def unique_budget_create_dto(create_test_user, create_test_category):
+    return BudgetCreateDTO(
+        amount=1500.0,
+        period=BudgetPeriod.WEEKLY,
+        start_date=datetime.now(),
+        end_date=datetime.now() + timedelta(days=7),
+        user_id=create_test_user.id,
+        category_id=create_test_category.id,
+    )
+
+
+@fixture
+def unique_budget_update_dto(unique_budget_entity):
+    return BudgetUpdateDTO(
+        id=unique_budget_entity.id,
+        amount=2000.0,
+        period=BudgetPeriod.MONTHLY,
+        start_date=datetime.now() + timedelta(days=1),
+        end_date=datetime.now() + timedelta(days=8),
+        category_id=unique_budget_entity.category_id,
+    )
 
 
 @fixture(params=["bcrypt_hasher"])

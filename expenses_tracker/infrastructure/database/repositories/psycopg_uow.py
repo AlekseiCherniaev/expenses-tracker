@@ -59,6 +59,7 @@ class PsycopgUnitOfWork(IUnitOfWork):
         self._user_repository = PsycopgUserRepository(conn=self._conn)
         self._category_repository = PsycopgCategoryRepository(conn=self._conn)
         self._expense_repository = PsycopgExpenseRepository(conn=self._conn)
+        self._budget_repository = PsycopgBudgetRepository(conn=self._conn)
         return self
 
     async def __aexit__(

@@ -13,13 +13,22 @@ class PsycopgBudgetRepository(IBudgetRepository):
     def __init__(self, conn: AsyncConnection) -> None:
         self._conn = conn
 
+    @staticmethod
+    def _row_to_budget(row: dict) -> Budget:  # type: ignore
+        return Budget(
+            **{
+                **row,
+                "period": BudgetPeriod(row["period"]),
+            }
+        )
+
     async def get_by_id(self, budget_id: UUID) -> Budget | None:
         async with self._conn.cursor(row_factory=dict_row) as cursor:
             await cursor.execute(
                 "SELECT * FROM budgets WHERE id = %s", (str(budget_id),)
             )
             row = await cursor.fetchone()
-            return Budget(**row) if row else None
+            return self._row_to_budget(row) if row else None
 
     async def get_all_by_user_id(self, user_id: UUID) -> list[Budget]:
         async with self._conn.cursor(row_factory=dict_row) as cursor:
@@ -27,7 +36,7 @@ class PsycopgBudgetRepository(IBudgetRepository):
                 "SELECT * FROM budgets WHERE user_id = %s", (str(user_id),)
             )
             rows = await cursor.fetchall()
-            return [Budget(**row) for row in rows]
+            return [self._row_to_budget(r) for r in rows]
 
     async def get_by_user_id_and_date_range(
         self, user_id: UUID, start_date: datetime, end_date: datetime
@@ -43,7 +52,7 @@ class PsycopgBudgetRepository(IBudgetRepository):
                 (str(user_id), start_date, end_date),
             )
             rows = await cursor.fetchall()
-            return [Budget(**row) for row in rows]
+            return [self._row_to_budget(r) for r in rows]
 
     async def get_by_user_id_and_category_id(
         self, user_id: UUID, category_id: UUID
@@ -58,7 +67,7 @@ class PsycopgBudgetRepository(IBudgetRepository):
                 (str(user_id), str(category_id)),
             )
             rows = await cursor.fetchall()
-            return [Budget(**row) for row in rows]
+            return [self._row_to_budget(r) for r in rows]
 
     async def get_active_budgets_by_user_id(
         self, user_id: UUID, current_date: datetime
@@ -74,7 +83,7 @@ class PsycopgBudgetRepository(IBudgetRepository):
                 (str(user_id), current_date, current_date),
             )
             rows = await cursor.fetchall()
-            return [Budget(**row) for row in rows]
+            return [self._row_to_budget(r) for r in rows]
 
     async def get_by_user_id_and_period(
         self, user_id: UUID, period: BudgetPeriod
@@ -89,7 +98,7 @@ class PsycopgBudgetRepository(IBudgetRepository):
                 (str(user_id), period.value),
             )
             rows = await cursor.fetchall()
-            return [Budget(**row) for row in rows]
+            return [self._row_to_budget(r) for r in rows]
 
     async def create(self, budget: Budget) -> Budget:
         async with self._conn.cursor(row_factory=dict_row) as cursor:
