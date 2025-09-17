@@ -11,8 +11,14 @@ from expenses_tracker.application.dto.category import (
     CategoryCreateDTO,
     CategoryUpdateDTO,
 )
+from expenses_tracker.application.dto.expense import (
+    ExpenseUpdateDTO,
+    ExpenseCreateDTO,
+    ExpenseDTO,
+)
 from expenses_tracker.application.dto.user import UserDTO, UserUpdateDTO, UserCreateDTO
 from expenses_tracker.domain.entities.category import Category
+from expenses_tracker.domain.entities.expense import Expense
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.infrastructure.database.models import Base
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
@@ -199,6 +205,80 @@ def unique_category_update_dto(unique_category_entity):
         is_default=True,
         description="Updated description",
     )
+
+
+@fixture
+def unique_expense_entity_with_times(
+    random_uuid, create_test_user, create_test_category
+):
+    before_create = datetime.now(timezone.utc)
+    expense = Expense(
+        amount=150.75,
+        date=datetime.now(),
+        user_id=create_test_user.id,
+        category_id=create_test_category.id,
+        description="Test expense description",
+    )
+    after_create = datetime.now(timezone.utc)
+    return expense, before_create, after_create
+
+
+@fixture
+def unique_expense_entity(unique_expense_entity_with_times):
+    expense, _, _ = unique_expense_entity_with_times
+    return expense
+
+
+@fixture
+def unique_expense_dto(unique_expense_entity):
+    return ExpenseDTO(
+        id=unique_expense_entity.id,
+        amount=unique_expense_entity.amount,
+        date=unique_expense_entity.date,
+        user_id=unique_expense_entity.user_id,
+        category_id=unique_expense_entity.category_id,
+        description=unique_expense_entity.description,
+        created_at=unique_expense_entity.created_at,
+        updated_at=unique_expense_entity.updated_at,
+    )
+
+
+@fixture
+def unique_expense_create_dto(
+    create_test_user, create_test_category, unique_expense_entity
+):
+    return ExpenseCreateDTO(
+        amount=unique_expense_entity.amount,
+        date=unique_expense_entity.date,
+        user_id=create_test_user.id,
+        category_id=create_test_category.id,
+        description=unique_expense_entity.description,
+    )
+
+
+@fixture
+def unique_expense_update_dto(unique_expense_entity):
+    return ExpenseUpdateDTO(
+        id=unique_expense_entity.id,
+        amount=300.25,
+        date=datetime.now(),
+        category_id=unique_expense_entity.category_id,
+        description="Updated expense description",
+    )
+
+
+@fixture
+async def create_test_category(unit_of_work, create_test_user):
+    category = Category(
+        name="TestCategory",
+        user_id=create_test_user.id,
+        color="blue",
+        description="Test category for expenses",
+    )
+    async with unit_of_work as uow:
+        created_category = await uow.category_repository.create(category)
+        return created_category
+    return None
 
 
 @fixture(params=["bcrypt_hasher"])
