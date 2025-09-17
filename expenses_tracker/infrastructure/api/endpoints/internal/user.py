@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from expenses_tracker.application.dto.user import UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
-from expenses_tracker.infrastructure.api.schemas.internal_user import (
+from expenses_tracker.infrastructure.api.schemas.user import (
     InternalUserResponse,
     InternalUserCreateRequest,
     InternalUserUpdateRequest,

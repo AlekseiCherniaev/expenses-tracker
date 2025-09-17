@@ -5,7 +5,7 @@ from expenses_tracker.infrastructure.api.schemas.auth import (
     TokenResponse,
     RefreshRequest,
 )
-from expenses_tracker.infrastructure.api.schemas.internal_user import (
+from expenses_tracker.infrastructure.api.schemas.user import (
     InternalUserCreateRequest,
 )
 
