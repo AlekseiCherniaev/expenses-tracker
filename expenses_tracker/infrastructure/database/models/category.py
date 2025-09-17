@@ -10,6 +10,7 @@ from expenses_tracker.infrastructure.database.models.base import Base
 if TYPE_CHECKING:
     from expenses_tracker.infrastructure.database.models.user import UserModel
     from expenses_tracker.infrastructure.database.models.expense import ExpenseModel
+    from expenses_tracker.infrastructure.database.models.budget import BudgetModel
 
 
 class CategoryModel(Base):
@@ -25,6 +26,9 @@ class CategoryModel(Base):
     )
     user: Mapped["UserModel"] = relationship(back_populates="categories")
     expenses: Mapped[list["ExpenseModel"]] = relationship(
+        back_populates="category", cascade="all, delete-orphan", passive_deletes=True
+    )
+    budgets: Mapped[list["BudgetModel"]] = relationship(
         back_populates="category", cascade="all, delete-orphan", passive_deletes=True
     )
 
