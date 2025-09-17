@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 from starlette.responses import Response, RedirectResponse
 
+from expenses_tracker.infrastructure.api.endpoints.internal.budget import (
+    router as internal_budget_router,
+)
 from expenses_tracker.infrastructure.api.endpoints.internal.category import (
     router as internal_category_router,
 )
@@ -19,6 +22,9 @@ from expenses_tracker.infrastructure.api.endpoints.internal.user import (
 from expenses_tracker.infrastructure.api.endpoints.public.auth import (
     router as auth_user_router,
 )
+from expenses_tracker.infrastructure.api.endpoints.public.budget import (
+    router as budget_router,
+)
 from expenses_tracker.infrastructure.api.endpoints.public.category import (
     router as category_router,
 )
@@ -34,11 +40,13 @@ public_router.include_router(auth_user_router)
 public_router.include_router(user_router)
 public_router.include_router(category_router)
 public_router.include_router(expense_router)
+public_router.include_router(budget_router)
 
 internal_router = APIRouter(prefix="/internal")
 internal_router.include_router(internal_user_router)
 internal_router.include_router(internal_category_router)
 internal_router.include_router(internal_expense_router)
+internal_router.include_router(internal_budget_router)
 internal_router.include_router(docs_router)
 internal_router.include_router(status_router)
 
