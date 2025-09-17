@@ -22,10 +22,19 @@ def postgres_container():
         yield postgres
 
 
+@fixture(scope="session")
+def postgres_container_sync_url(postgres_container):
+    return postgres_container.get_connection_url().replace("+psycopg2", "")
+
+
+@fixture(scope="session")
+def postgres_container_async_url(postgres_container):
+    return postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
+
+
 @fixture
-async def async_engine(postgres_container):
-    url = postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
-    engine = create_async_engine(url, echo=False)
+async def async_engine(postgres_container_async_url):
+    engine = create_async_engine(postgres_container_async_url, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
@@ -49,7 +58,7 @@ def override_settings(postgres_container, monkeypatch):
 
 
 @fixture
-async def configured_app(override_settings, async_engine) -> FastAPI:
+def configured_app(override_settings, async_engine) -> FastAPI:
     app = init_app()
     return app
 
@@ -63,12 +72,12 @@ async def lifespan_manager(
 
 
 @fixture
-async def lifespan_state(lifespan_manager: LifespanManager) -> State:
+def lifespan_state(lifespan_manager: LifespanManager) -> State:
     return State(lifespan_manager._state)
 
 
 @fixture
-async def initialized_app(lifespan_manager: LifespanManager) -> ASGIApp:
+def initialized_app(lifespan_manager: LifespanManager) -> ASGIApp:
     return lifespan_manager.app
 
 

@@ -1,98 +1,11 @@
 from datetime import datetime, timezone
-from uuid import uuid4, UUID
 
 import pytest
 from pytest_asyncio import fixture
 
-from expenses_tracker.application.dto.user import UserCreateDTO, UserDTO, UserUpdateDTO
+from expenses_tracker.application.dto.user import UserCreateDTO, UserDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
-from expenses_tracker.domain.entities.user import User
-from expenses_tracker.domain.exceptions import UserNotFound, UserAlreadyExists
-from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
-    DummyUnitOfWork,
-)
-from expenses_tracker.infrastructure.database.repositories.sqlalchemy_uow import (
-    SqlAlchemyUnitOfWork,
-)
-from expenses_tracker.infrastructure.security.password_hasher import (
-    BcryptPasswordHasher,
-)
-
-
-@fixture(autouse=True)
-def random_uuid() -> UUID:
-    return uuid4()
-
-
-@fixture
-def unique_user_create_dto(random_uuid):
-    uid = random_uuid.hex[:6]
-    return UserCreateDTO(
-        username=f"user_{uid}",
-        password="password123",
-        email=f"user_{uid}@test.com",
-    )
-
-
-@fixture
-def unique_user_entity_with_times(random_uuid) -> (User, datetime, datetime):
-    before_create = datetime.now(timezone.utc)
-    uid = random_uuid.hex[:6]
-    user = User(
-        username=f"user_{uid}",
-        hashed_password="hashed_password123",
-        email=f"user_{uid}@test.com",
-    )
-    after_create = datetime.now(timezone.utc)
-    return user, before_create, after_create
-
-
-@fixture
-def unique_user_entity(unique_user_entity_with_times):
-    user, _, _ = unique_user_entity_with_times
-    return user
-
-
-@fixture
-def unique_user_dto(unique_user_entity):
-    return UserDTO(
-        id=unique_user_entity.id,
-        username=unique_user_entity.username,
-        email=unique_user_entity.email,
-        is_active=unique_user_entity.is_active,
-        created_at=unique_user_entity.created_at,
-        updated_at=unique_user_entity.updated_at,
-    )
-
-
-@fixture
-def unique_user_update_dto(unique_user_entity):
-    return UserUpdateDTO(
-        id=unique_user_entity.id,
-        password="new_password",
-        email="new_email@test.com",
-        is_active=True,
-    )
-
-
-@fixture(params=["bcrypt_hasher"])
-def password_hasher(request):
-    match request.param:
-        case "bcrypt_hasher":
-            return BcryptPasswordHasher()
-        case _:
-            raise ValueError(f"Unknown password_hasher {request.param}")
-
-
-@fixture(params=["dummy", "sqlalchemy"])
-def unit_of_work(request, async_session_factory):
-    match request.param:
-        case "dummy":
-            return DummyUnitOfWork()
-        case "sqlalchemy":
-            return SqlAlchemyUnitOfWork(session_factory=async_session_factory)
-        case _:
-            raise ValueError(f"Unknown repo {request.param}")
+from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
 
 
 class TestUserUseCases:
