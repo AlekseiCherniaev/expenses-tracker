@@ -84,8 +84,8 @@ services:
       - certbot-var:/var/lib/letsencrypt
     command: [
       "certonly",
-      "--standalone",\
-      "preferred-challenges", "http",
+      "--standalone",
+      "--preferred-challenges", "http",
       "--email=${CERTBOT_EMAIL}",
       "--agree-tos",
       "--no-eff-email",
