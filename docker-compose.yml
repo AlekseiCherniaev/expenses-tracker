@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   api:
     build:
@@ -7,8 +8,8 @@ services:
     container_name: api_container
     networks:
       - common_network
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - .env.prod
     depends_on:
@@ -59,6 +60,53 @@ services:
     networks:
       - common_network
 
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_container
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./certbot-www:/var/www/certbot
+    depends_on:
+      - api
+    networks:
+      - common_network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot_container
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./certbot-www:/var/www/certbot
+    command: [
+      "certonly",
+      "--webroot",
+      "--webroot-path=/var/www/certbot",
+      "--email=${CERTBOT_EMAIL}",
+      "--agree-tos",
+      "--no-eff-email",
+      "-d", "${DOMAIN}",
+      "-d", "www.${DOMAIN}"
+    ]
+    env_file:
+      - .env.prod
+
+  certbot-renew:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./certbot-www:/var/www/certbot
+    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx_container nginx -s reload; sleep 12h; done"
+    restart: unless-stopped
+    networks:
+      - common_network
+
 networks:
   common_network:
     name: common_network
@@ -68,3 +116,5 @@ volumes:
   postgres:
     driver: local
     name: expenses_postgres_data
+  certbot-etc:
+  certbot-var:
