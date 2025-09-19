@@ -4,14 +4,14 @@
 
 ### Setup
 
-1. Configure `.env.prod` with domain, email, and database settings.
+1. Configure `.env.prod` with domain and email
 2. Obtain certificates (first time only):
    ```bash
-   docker compose run --rm certbot
+   docker-compose --env-file .env.prod run --rm -p 80:80 certbot
    ```
 3. Start services:
     ```bash
-    docker compose up -d api postgres migrations nginx certbot-renew
+    docker-compose up -d --build api migrations nginx certbot-renew
     ```
 
 ## Notes
