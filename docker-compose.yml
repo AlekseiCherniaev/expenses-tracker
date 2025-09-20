@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: api_container
+    container_name: api
     networks:
       - common_network
     expose:
@@ -25,7 +25,7 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    container_name: postgres_container
+    container_name: postgres
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -50,6 +50,7 @@ services:
       - common_network
 
   migrations:
+    container_name: migrations
     build: .
     command: ["/app/.venv/bin/alembic", "upgrade", "head"]
     env_file:
@@ -62,7 +63,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: nginx_container
+    container_name: nginx
     ports:
       - "80:80"
       - "443:443"
@@ -78,7 +79,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: certbot_container
+    container_name: certbot
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
@@ -97,6 +98,7 @@ services:
 
   certbot-renew:
     image: certbot/certbot
+    container_name: certbot_renew
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
