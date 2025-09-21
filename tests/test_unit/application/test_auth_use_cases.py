@@ -1,40 +1,16 @@
-from unittest.mock import AsyncMock, Mock
-from uuid import uuid4
+from unittest.mock import Mock
 
 import pytest
 from pytest_asyncio import fixture
 
 from expenses_tracker.application.dto.token import TokenPairDTO
-from expenses_tracker.application.dto.user import UserCreateDTO
-from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
-from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
-from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.auth import (
     InvalidCredentials,
     TokenExpired,
     InvalidToken,
 )
 from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
-from expenses_tracker.domain.repositories.uow import IUnitOfWork
-from expenses_tracker.domain.repositories.user import IUserRepository
-
-
-@fixture
-def user_entity():
-    return User(
-        id=uuid4(),
-        username="test",
-        email="test@test.com",
-        hashed_password="hashed_password",
-    )
-
-
-@fixture
-def user_create_dto(user_entity):
-    return UserCreateDTO(
-        username=user_entity.username, email=user_entity.email, password="password123"
-    )
 
 
 @fixture
@@ -42,37 +18,6 @@ def token_pair_dto():
     return TokenPairDTO(
         access_token="access_token", refresh_token="refresh_token", token_type="bearer"
     )
-
-
-@fixture
-def mock_unit_of_work():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    mock_uow.__aenter__ = AsyncMock()
-    mock_uow.__aexit__ = AsyncMock(return_value=False)
-    mock_user_repo = AsyncMock(spec=IUserRepository)
-    mock_uow.__aenter__.return_value.user_repository = mock_user_repo
-    return mock_uow
-
-
-@fixture
-def mock_password_hasher(user_entity):
-    mock_hasher = Mock(spec=IPasswordHasher)
-    mock_hasher.hash.return_value = user_entity.hashed_password
-    mock_hasher.verify.return_value = True
-    return mock_hasher
-
-
-@fixture
-def mock_token_service(token_pair_dto):
-    mock_service = Mock(spec=ITokenService)
-    mock_service.create_token.return_value = "test_token"
-    mock_service.decode_token.return_value = Mock(sub=str(uuid4()))
-    return mock_service
-
-
-@fixture()
-def random_uuid():
-    return uuid4()
 
 
 class TestAuthUserUseCases:

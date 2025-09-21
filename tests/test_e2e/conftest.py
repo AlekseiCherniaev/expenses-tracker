@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+import redis.asyncio as redis
 from asgi_lifespan import LifespanManager
 from asgi_lifespan._types import ASGIApp
 from fastapi import FastAPI
@@ -8,6 +9,7 @@ from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine
 from starlette.datastructures import State
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 from expenses_tracker.app import init_app
 from expenses_tracker.core import settings as settings_module
@@ -18,8 +20,25 @@ from expenses_tracker.infrastructure.database.models import Base
 
 @fixture(scope="session")
 def postgres_container():
-    with PostgresContainer("postgres:15") as postgres:
-        yield postgres
+    with PostgresContainer("postgres:15") as container:
+        yield container
+
+
+@fixture(scope="session")
+def redis_container():
+    with RedisContainer().with_bind_ports(6379, 6399) as container:
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(6379)
+        yield {"host": host, "port": port, "dsn": f"redis://{host}:{port}/0"}
+
+
+@fixture(scope="function")
+async def redis_client(redis_container):
+    client = redis.Redis.from_url(
+        redis_container["dsn"], encoding="utf-8", decode_responses=True
+    )
+    yield client
+    await client.close()
 
 
 @fixture(scope="session")
@@ -44,7 +63,7 @@ async def async_engine(postgres_container_async_url):
 
 
 @fixture
-def override_settings(postgres_container, monkeypatch):
+def override_settings(postgres_container, redis_container, monkeypatch):
     test_settings = Settings(
         environment=Environment.TEST,
         postgres_host=postgres_container.get_container_host_ip(),
@@ -52,6 +71,9 @@ def override_settings(postgres_container, monkeypatch):
         postgres_user="test",
         postgres_password="test",
         postgres_db="test",
+        redis_host=redis_container["host"],
+        redis_port=redis_container["port"],
+        redis_db=0,
     )
     monkeypatch.setattr(settings_module, "Settings", lambda: test_settings)
     return test_settings

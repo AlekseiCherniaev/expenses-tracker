@@ -23,14 +23,14 @@ async def register_user(
     user_data: UserCreateRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> TokenResponse:
-    logger.bind(user_data=user_data).debug("Registering user")
+    logger.bind(user_username=user_data.username).debug("Registering user")
     create_user_dto = UserCreateDTO(
         username=user_data.username,
         email=user_data.email,
         password=user_data.password,
     )
     token_pair = await auth_use_cases.register(user_data=create_user_dto)
-    logger.bind(user_data=user_data).debug("Registered user")
+    logger.bind(user_username=user_data.username).debug("Registered user")
     return TokenResponse(
         refresh_token=token_pair.refresh_token,
         access_token=token_pair.access_token,

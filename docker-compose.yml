@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: api_container
+    container_name: api
     networks:
       - common_network
     expose:
@@ -17,7 +17,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/internal/health\")' || exit 1"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,7 +25,7 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    container_name: postgres_container
+    container_name: postgres
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -49,7 +49,29 @@ services:
     networks:
       - common_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 32M
+        reservations:
+          cpus: '0.05'
+          memory: 16M
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - common_network
+
   migrations:
+    container_name: migrations
     build: .
     command: ["/app/.venv/bin/alembic", "upgrade", "head"]
     env_file:
@@ -62,7 +84,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: nginx_container
+    container_name: nginx
     ports:
       - "80:80"
       - "443:443"
@@ -78,14 +100,14 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: certbot_container
+    container_name: certbot
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
     command: [
       "certonly",
-      "--standalone",\
-      "preferred-challenges", "http",
+      "--standalone",
+      "--preferred-challenges", "http",
       "--email=${CERTBOT_EMAIL}",
       "--agree-tos",
       "--no-eff-email",
@@ -97,6 +119,7 @@ services:
 
   certbot-renew:
     image: certbot/certbot
+    container_name: certbot_renew
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt

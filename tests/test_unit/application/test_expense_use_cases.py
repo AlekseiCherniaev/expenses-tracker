@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -13,7 +12,6 @@ from expenses_tracker.application.dto.expense import (
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
 from expenses_tracker.domain.entities.expense import Expense
 from expenses_tracker.domain.exceptions.expense import ExpenseNotFound
-from expenses_tracker.domain.repositories.uow import IUnitOfWork
 
 
 @fixture
@@ -66,25 +64,12 @@ def expense_update_dto(expense_entity):
     )
 
 
-@fixture
-def mock_unit_of_work():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    mock_uow.__aenter__ = AsyncMock()
-    mock_uow.__aexit__ = AsyncMock(return_value=False)
-    mock_expense_repo = AsyncMock()
-    mock_uow.__aenter__.return_value.expense_repository = mock_expense_repo
-    return mock_uow
-
-
-@fixture()
-def random_uuid():
-    return uuid4()
-
-
 class TestExpenseUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work):
-        self.expense_use_cases = ExpenseUseCases(unit_of_work=mock_unit_of_work)
+    def setup(self, mock_unit_of_work, cache_service_mock):
+        self.expense_use_cases = ExpenseUseCases(
+            unit_of_work=mock_unit_of_work, cache_service=cache_service_mock
+        )
         self.mock_unit_of_work = mock_unit_of_work
 
     async def test_get_expense_success(

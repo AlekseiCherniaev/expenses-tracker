@@ -2,7 +2,6 @@ import structlog
 from fastapi import APIRouter
 
 router = APIRouter(tags=["status"])
-
 logger = structlog.getLogger(__name__)
 
 
