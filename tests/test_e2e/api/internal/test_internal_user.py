@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 class TestInternalUserApi:
     async def test_health(self, async_client):
-        response = await async_client.get("/internal/health")
+        response = await async_client.get("/health")
 
         assert response.status_code == 200
         assert response.json() == {"status": "OK"}
