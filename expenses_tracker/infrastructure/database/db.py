@@ -13,7 +13,3 @@ def create_sqlalchemy_engine() -> AsyncEngine:
         echo_pool=get_settings().database_pool_echo,
         pool_size=get_settings().pool_size,
     )
-
-
-def create_psycopg_dsn() -> str:
-    return get_settings().sync_postgres_url
