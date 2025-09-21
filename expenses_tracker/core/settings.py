@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     redis_host: str = "localhost"
     redis_port: int = 6379
-    redis_db: int = 8
+    redis_db: int = 0
     user_dto_ttl_seconds: int = 60 * 5
 
     @computed_field  # type: ignore
