@@ -116,7 +116,7 @@ class ExpenseUseCases:
                 description=expense_data.description,
             )
             expense = await uow.expense_repository.create(expense=new_expense)
-            logger.bind(expense=expense).debug("Created expense from repo")
+            logger.bind(expense=expense).debug("Created expense in repo")
             return ExpenseDTO(
                 id=expense.id,
                 amount=expense.amount,
@@ -145,7 +145,7 @@ class ExpenseUseCases:
             expense.updated_at = datetime.now(timezone.utc)
             updated_expense = await uow.expense_repository.update(expense=expense)
             logger.bind(updated_expense=updated_expense).debug(
-                "Updated expense from repo"
+                "Updated expense in repo"
             )
             return ExpenseDTO(
                 id=expense.id,
@@ -165,6 +165,6 @@ class ExpenseUseCases:
             if not expense:
                 raise ExpenseNotFound(f"Expense with id {expense_id} not found")
             await uow.expense_repository.delete(expense=expense)
-            logger.bind(expense=expense).debug("Deleted expense from repo")
+            logger.bind(expense=expense).debug("Deleted expense in repo")
             return None
         assert False, "unreachable"

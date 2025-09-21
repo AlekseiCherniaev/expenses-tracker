@@ -57,7 +57,7 @@ class UserUseCases:
         cache_key = self._user_cache_key(user_id)
         cached_user = await self._cache_service.get(key=cache_key, serializer=UserDTO)
         if cached_user:
-            logger.bind(user=cached_user).debug("Retrieved user from cache")
+            logger.bind(user_id=cached_user.id).debug("Retrieved user from cache")
             return cached_user
 
         async with self._unit_of_work as uow:
@@ -69,7 +69,9 @@ class UserUseCases:
             await self._cache_service.set(
                 key=cache_key, value=user_dto, ttl=get_settings().user_dto_ttl_seconds
             )
-            logger.bind(user=user_dto).debug("Retrieved user from repo and cached")
+            logger.bind(user_id=user_dto.id).debug(
+                "Retrieved user from repo and cached"
+            )
             return user_dto
         assert False, "unreachable"
 
@@ -92,7 +94,7 @@ class UserUseCases:
                 email=user_data.email,
             )
             user = await uow.user_repository.create(user=new_user)
-            logger.bind(user=user).debug("Created user from repo")
+            logger.bind(user=user).debug("Created user in repo")
 
             user_dto = self._to_dto(user)
             await self._cache_service.set(
@@ -121,7 +123,7 @@ class UserUseCases:
             user.updated_at = datetime.now(timezone.utc)
 
             updated_user = await uow.user_repository.update(user=user)
-            logger.bind(user=updated_user).debug("Updated user from repo")
+            logger.bind(user=updated_user).debug("Updated user in repo")
 
             user_dto = self._to_dto(updated_user)
             await self._cache_service.set(
@@ -138,7 +140,7 @@ class UserUseCases:
             if not user:
                 raise UserNotFound(f"User with id {user_id} not found")
             await uow.user_repository.delete(user=user)
-            logger.bind(user=user).debug("Deleted user from repo")
+            logger.bind(user=user).debug("Deleted user in repo")
 
         await self._cache_service.delete(key=self._user_cache_key(user_id))
         return None

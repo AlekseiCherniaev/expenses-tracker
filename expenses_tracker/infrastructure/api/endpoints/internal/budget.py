@@ -159,7 +159,7 @@ async def delete_internal_budget(
 
 
 @router.get("/total-amount/{user_id}")
-async def get_total_budget_amount_for_period(
+async def get_iternal_total_budget_amount_for_period(
     user_id: UUID,
     start_date: datetime,
     end_date: datetime,

@@ -68,7 +68,7 @@ class CategoryUseCases:
                 color=category_data.color,
             )
             category = await uow.category_repository.create(category=new_category)
-            logger.bind(category=category).debug("Created category from repo")
+            logger.bind(category=category).debug("Created category in repo")
             return CategoryDTO(
                 id=category.id,
                 name=category.name,
@@ -101,7 +101,7 @@ class CategoryUseCases:
             category.updated_at = datetime.now(timezone.utc)
             updated_category = await uow.category_repository.update(category=category)
             logger.bind(updated_category=updated_category).debug(
-                "Updated updated_category from repo"
+                "Updated updated_category in repo"
             )
             return CategoryDTO(
                 id=category.id,
@@ -120,7 +120,8 @@ class CategoryUseCases:
             category = await uow.category_repository.get_by_id(category_id=category_id)
             if not category:
                 raise CategoryNotFound(f"Category with id {category_id} not found")
+
             await uow.category_repository.delete(category=category)
-            logger.bind(category=category).debug("Deleted category from repo")
+            logger.bind(category=category).debug("Deleted category in repo")
             return None
         assert False, "unreachable"

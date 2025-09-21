@@ -63,7 +63,7 @@ class AuthUserUseCases:
                 email=user_data.email,
             )
             user = await uow.user_repository.create(user=new_user)
-            logger.bind(user=user).debug("Created user from repo")
+            logger.bind(username=user_data.username).debug("Created user in repo")
             return self._create_tokens_for_user(user=user)
         assert False, "unreachable"
 
@@ -72,6 +72,7 @@ class AuthUserUseCases:
             user = await uow.user_repository.get_by_username(username)
             if not user:
                 raise UserNotFound(f"User with username {username} not found")
+
             if not self._password_hasher.verify(
                 password=password, hashed=user.hashed_password
             ):
@@ -86,5 +87,6 @@ class AuthUserUseCases:
             user = await uow.user_repository.get_by_id(user_id=user_id)
             if not user:
                 raise UserNotFound(f"User with id {user_id} not found")
+
             return self._create_tokens_for_user(user)
         assert False, "unreachable"

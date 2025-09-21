@@ -159,6 +159,21 @@ class BudgetUseCases:
             ]
         assert False, "unreachable"
 
+    async def get_total_budget_amount_for_period(
+        self, user_id: UUID, start_date: datetime, end_date: datetime
+    ) -> float:
+        async with self._unit_of_work as uow:
+            total_amount = (
+                await uow.budget_repository.get_total_budget_amount_for_period(
+                    user_id=user_id, start_date=start_date, end_date=end_date
+                )
+            )
+            logger.bind(total_amount=total_amount).debug(
+                "Retrieved total budget amount from repo"
+            )
+            return total_amount
+        assert False, "unreachable"
+
     async def create_budget(self, budget_data: BudgetCreateDTO) -> BudgetDTO:
         async with self._unit_of_work as uow:
             new_budget = Budget(
@@ -170,7 +185,7 @@ class BudgetUseCases:
                 category_id=budget_data.category_id,
             )
             budget = await uow.budget_repository.create(budget=new_budget)
-            logger.bind(budget=budget).debug("Created budget from repo")
+            logger.bind(budget=budget).debug("Created budget in repo")
             return BudgetDTO(
                 id=budget.id,
                 amount=budget.amount,
@@ -203,7 +218,7 @@ class BudgetUseCases:
 
             budget.updated_at = datetime.now(timezone.utc)
             updated_budget = await uow.budget_repository.update(budget=budget)
-            logger.bind(updated_budget=updated_budget).debug("Updated budget from repo")
+            logger.bind(updated_budget=updated_budget).debug("Updated budget in repo")
 
             return BudgetDTO(
                 id=updated_budget.id,
@@ -224,21 +239,6 @@ class BudgetUseCases:
             if not budget:
                 raise BudgetNotFound(f"Budget with id {budget_id} not found")
             await uow.budget_repository.delete(budget=budget)
-            logger.bind(budget=budget).debug("Deleted budget from repo")
+            logger.bind(budget=budget).debug("Deleted budget in repo")
             return None
-        assert False, "unreachable"
-
-    async def get_total_budget_amount_for_period(
-        self, user_id: UUID, start_date: datetime, end_date: datetime
-    ) -> float:
-        async with self._unit_of_work as uow:
-            total_amount = (
-                await uow.budget_repository.get_total_budget_amount_for_period(
-                    user_id=user_id, start_date=start_date, end_date=end_date
-                )
-            )
-            logger.bind(total_amount=total_amount).debug(
-                "Retrieved total budget amount from repo"
-            )
-            return total_amount
         assert False, "unreachable"
