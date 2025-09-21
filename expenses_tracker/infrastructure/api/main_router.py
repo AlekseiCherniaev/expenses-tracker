@@ -13,9 +13,6 @@ from expenses_tracker.infrastructure.api.endpoints.internal.docs import (
 from expenses_tracker.infrastructure.api.endpoints.internal.expense import (
     router as internal_expense_router,
 )
-from expenses_tracker.infrastructure.api.endpoints.internal.status import (
-    router as status_router,
-)
 from expenses_tracker.infrastructure.api.endpoints.internal.user import (
     router as internal_user_router,
 )
@@ -31,6 +28,9 @@ from expenses_tracker.infrastructure.api.endpoints.public.category import (
 from expenses_tracker.infrastructure.api.endpoints.public.expense import (
     router as expense_router,
 )
+from expenses_tracker.infrastructure.api.endpoints.public.health import (
+    router as health_router,
+)
 from expenses_tracker.infrastructure.api.endpoints.public.user import (
     router as user_router,
 )
@@ -43,6 +43,7 @@ def create_public_router() -> APIRouter:
     router.include_router(category_router)
     router.include_router(expense_router)
     router.include_router(budget_router)
+    router.include_router(health_router)
     return router
 
 
@@ -53,7 +54,6 @@ def create_internal_router() -> APIRouter:
     router.include_router(internal_expense_router)
     router.include_router(internal_budget_router)
     router.include_router(docs_router)
-    router.include_router(status_router)
     return router
 
 
