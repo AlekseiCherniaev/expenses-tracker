@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     project_description: str = project_config.get("description", "")
     static_url_path: Path = base_dir / "static"
 
-    environment: Environment = Environment.DEV
+    environment: Environment = Environment.TEST
     log_level: str = "DEBUG"
     fast_api_debug: bool = False
 
