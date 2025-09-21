@@ -66,8 +66,10 @@ def category_update_dto(category_entity):
 
 class TestCategoryUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work):
-        self.category_use_cases = CategoryUseCases(unit_of_work=mock_unit_of_work)
+    def setup(self, mock_unit_of_work, cache_service_mock):
+        self.category_use_cases = CategoryUseCases(
+            unit_of_work=mock_unit_of_work, cache_service=cache_service_mock
+        )
         self.mock_unit_of_work = mock_unit_of_work
 
     async def test_get_category_success(

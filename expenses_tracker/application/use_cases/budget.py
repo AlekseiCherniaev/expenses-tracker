@@ -228,6 +228,7 @@ class BudgetUseCases:
             budget = await uow.budget_repository.get_by_id(budget_id=budget_id)
             if not budget:
                 raise BudgetNotFound(f"Budget with id {budget_id} not found")
+
             await uow.budget_repository.delete(budget=budget)
             logger.bind(budget=budget).debug("Deleted budget in repo")
 

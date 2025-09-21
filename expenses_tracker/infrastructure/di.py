@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from expenses_tracker.application.dto.budget import BudgetDTO
+from expenses_tracker.application.dto.category import CategoryDTO
 from expenses_tracker.application.dto.expense import ExpenseDTO
 from expenses_tracker.application.dto.user import UserDTO
 from expenses_tracker.application.interfaces.cache_service import ICacheService
@@ -64,8 +65,11 @@ async def get_user_use_cases(
 
 async def get_category_use_cases(
     uow: IUnitOfWork = Depends(get_psycopg_uow),
+    cache_service: ICacheService[CategoryDTO | list[CategoryDTO]] = Depends(
+        get_redis_service
+    ),
 ) -> CategoryUseCases:
-    return CategoryUseCases(unit_of_work=uow)
+    return CategoryUseCases(unit_of_work=uow, cache_service=cache_service)
 
 
 async def get_expense_use_cases(

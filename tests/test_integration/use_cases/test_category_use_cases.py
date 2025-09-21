@@ -13,8 +13,10 @@ from expenses_tracker.domain.exceptions.category import CategoryNotFound
 
 class TestCategoryUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work):
-        self.category_use_cases = CategoryUseCases(unit_of_work=unit_of_work)
+    def setup(self, unit_of_work, cache_service):
+        self.category_use_cases = CategoryUseCases(
+            unit_of_work=unit_of_work, cache_service=cache_service
+        )
         self.unit_of_work = unit_of_work
 
     async def _create_category(self, category_entity: Category) -> Category:
