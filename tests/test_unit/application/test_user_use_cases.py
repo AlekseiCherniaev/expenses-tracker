@@ -99,7 +99,9 @@ class TestUserUseCases:
 
         assert isinstance(user, UserDTO)
         assert user == user_dto
-        self.cache_service_mock.get.assert_awaited_once_with(f"user:{user_entity.id}")
+        self.cache_service_mock.get.assert_awaited_once_with(
+            key=f"user:{user_entity.id}", serializer=UserDTO
+        )
         self.cache_service_mock.set.assert_awaited_once()
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
 
@@ -110,7 +112,9 @@ class TestUserUseCases:
 
         with pytest.raises(UserNotFound):
             await self.user_use_cases.get_user(user_id=random_uuid)
-        self.cache_service_mock.get.assert_awaited_once_with(f"user:{random_uuid}")
+        self.cache_service_mock.get.assert_awaited_once_with(
+            key=f"user:{random_uuid}", serializer=UserDTO
+        )
         mock_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
 
     async def test__validate_user_uniqueness(self, mock_unit_of_work, user_entity):

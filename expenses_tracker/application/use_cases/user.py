@@ -40,7 +40,7 @@ class UserUseCases:
 
     async def get_user(self, user_id: UUID) -> UserDTO:
         cache_key = f"user:{user_id}"
-        cached_user = await self._cache_service.get(cache_key)
+        cached_user = await self._cache_service.get(key=cache_key, serializer=UserDTO)
         if cached_user:
             logger.bind(user=cached_user).debug("Retrieved user from cache")
             return cached_user

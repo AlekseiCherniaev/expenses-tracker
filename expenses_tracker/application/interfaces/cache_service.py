@@ -6,7 +6,7 @@ T = TypeVar("T")
 
 class ICacheService(ABC, Generic[T]):
     @abstractmethod
-    async def get(self, key: str) -> T | None:
+    async def get(self, key: str, serializer: type[T]) -> T | None:
         pass
 
     @abstractmethod
