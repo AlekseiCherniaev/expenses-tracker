@@ -48,6 +48,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.redis_service = RedisService()
     logger.info("Startup completed")
     yield
+    await app.state.sqlalchemy_engine.dispose()
     await app.state.redis_service.close()
     logger.debug("Server stopped")
 
