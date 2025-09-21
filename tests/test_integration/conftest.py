@@ -1,10 +1,12 @@
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4, UUID
 
+import redis.asyncio as redis
 from psycopg import AsyncConnection
 from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 from expenses_tracker.application.dto.budget import (
     BudgetUpdateDTO,
@@ -28,6 +30,7 @@ from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.entities.expense import Expense
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.infrastructure.cache.dummy_cache_service import DummyCacheService
+from expenses_tracker.infrastructure.cache.redis_cache_service import RedisService
 from expenses_tracker.infrastructure.database.models import Base
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
     DummyUnitOfWork,
@@ -89,6 +92,23 @@ def async_session_factory(async_engine):
 async def async_session(async_session_factory):
     async with async_session_factory() as session:
         yield session
+
+
+@fixture(scope="session")
+def redis_container():
+    with RedisContainer().with_bind_ports(6379, 6398) as container:
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(6379)
+        yield {"host": host, "port": port, "dsn": f"redis://{host}:{port}/0"}
+
+
+@fixture(scope="function")
+async def redis_client(redis_container):
+    client = redis.Redis.from_url(
+        redis_container["dsn"], encoding="utf-8", decode_responses=True
+    )
+    yield client
+    await client.aclose()
 
 
 @fixture(autouse=True)
@@ -382,10 +402,12 @@ def unit_of_work(request, async_session_factory, postgres_container_sync_url):
             raise ValueError(f"Unknown repo {request.param}")
 
 
-@fixture(params=["dummy_cache_service"])
-def cache_service(request):
+@fixture(params=["dummy_cache_service", "redis_cache_service"])
+def cache_service(request, redis_container):
     match request.param:
         case "dummy_cache_service":
             return DummyCacheService()
+        case "redis_cache_service":
+            return RedisService(url=redis_container["dsn"])
         case _:
             raise ValueError(f"Unknown cache_service {request.param}")

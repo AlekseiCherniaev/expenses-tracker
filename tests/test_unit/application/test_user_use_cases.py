@@ -8,6 +8,7 @@ from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUp
 from expenses_tracker.application.interfaces.cache_service import ICacheService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.use_cases.user import UserUseCases
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
@@ -163,6 +164,11 @@ class TestUserUseCases:
         assert user == user_dto
         mock_repo.create.assert_called_once()
         mock_password_hasher.hash.assert_called_once_with(password="new_password")
+        self.cache_service_mock.set.assert_awaited_once_with(
+            key=f"user:{user_entity.id}",
+            value=user,
+            ttl=get_settings().user_dto_ttl_seconds,
+        )
 
     @pytest.mark.parametrize(
         "existing_field, none_field, error_message",
@@ -219,6 +225,11 @@ class TestUserUseCases:
             password=user_update_dto.password
         )
         mock_repo.update.assert_called_once_with(user=user_entity)
+        self.cache_service_mock.set.assert_awaited_once_with(
+            key=f"user:{user_entity.id}",
+            value=user,
+            ttl=get_settings().user_dto_ttl_seconds,
+        )
 
     async def test_update_user_not_found(
         self, mock_unit_of_work, user_update_dto, random_uuid

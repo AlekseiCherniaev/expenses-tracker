@@ -25,6 +25,21 @@ class UserUseCases:
         self._password_hasher = password_hasher
         self._cache_service = cache_service
 
+    @staticmethod
+    def _to_dto(user: User) -> UserDTO:
+        return UserDTO(
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            id=user.id,
+        )
+
+    @staticmethod
+    def _user_cache_key(user_id: UUID) -> str:
+        return f"user:{user_id}"
+
     async def _validate_user_uniqueness(
         self,
         uow: IUnitOfWork,
@@ -39,25 +54,20 @@ class UserUseCases:
             raise UserAlreadyExists(f"User with username {new_username} already exists")
 
     async def get_user(self, user_id: UUID) -> UserDTO:
-        cache_key = f"user:{user_id}"
+        cache_key = self._user_cache_key(user_id)
         cached_user = await self._cache_service.get(key=cache_key, serializer=UserDTO)
         if cached_user:
             logger.bind(user=cached_user).debug("Retrieved user from cache")
             return cached_user
+
         async with self._unit_of_work as uow:
             user = await uow.user_repository.get_by_id(user_id=user_id)
             if not user:
                 raise UserNotFound(f"User with id {user_id} not found")
-            user_dto = UserDTO(
-                username=user.username,
-                email=user.email,
-                is_active=user.is_active,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
-                id=user.id,
-            )
+
+            user_dto = self._to_dto(user)
             await self._cache_service.set(
-                cache_key, user_dto, ttl=get_settings().user_dto_ttl_seconds
+                key=cache_key, value=user_dto, ttl=get_settings().user_dto_ttl_seconds
             )
             logger.bind(user=user_dto).debug("Retrieved user from repo and cached")
             return user_dto
@@ -66,18 +76,8 @@ class UserUseCases:
     async def get_all_users(self) -> list[UserDTO]:
         async with self._unit_of_work as uow:
             users = await uow.user_repository.get_all()
-            logger.bind(users=users).debug("Retrieved users from repo")
-            return [
-                UserDTO(
-                    username=user.username,
-                    email=user.email,
-                    is_active=user.is_active,
-                    created_at=user.created_at,
-                    updated_at=user.updated_at,
-                    id=user.id,
-                )
-                for user in users
-            ]
+            logger.bind(count=len(users)).debug("Retrieved users from repo")
+            return [self._to_dto(user) for user in users]
         assert False, "unreachable"
 
     async def create_user(self, user_data: UserCreateDTO) -> UserDTO:
@@ -93,14 +93,14 @@ class UserUseCases:
             )
             user = await uow.user_repository.create(user=new_user)
             logger.bind(user=user).debug("Created user from repo")
-            return UserDTO(
-                username=user.username,
-                email=user.email,
-                is_active=user.is_active,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
-                id=user.id,
+
+            user_dto = self._to_dto(user)
+            await self._cache_service.set(
+                key=self._user_cache_key(user_dto.id),
+                value=user_dto,
+                ttl=get_settings().user_dto_ttl_seconds,
             )
+            return user_dto
         assert False, "unreachable"
 
     async def update_user(self, user_data: UserUpdateDTO) -> UserDTO | None:
@@ -108,6 +108,7 @@ class UserUseCases:
             user = await uow.user_repository.get_by_id(user_id=user_data.id)
             if not user:
                 raise UserNotFound(f"User with id {user_data.id} not found")
+
             if user_data.email and user_data.email != user.email:
                 await self._validate_user_uniqueness(uow=uow, new_email=user_data.email)
                 user.email = user_data.email
@@ -118,16 +119,17 @@ class UserUseCases:
                     password=user_data.password
                 )
             user.updated_at = datetime.now(timezone.utc)
+
             updated_user = await uow.user_repository.update(user=user)
             logger.bind(user=updated_user).debug("Updated user from repo")
-            return UserDTO(
-                username=user.username,
-                email=user.email,
-                is_active=user.is_active,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
-                id=user.id,
+
+            user_dto = self._to_dto(updated_user)
+            await self._cache_service.set(
+                key=self._user_cache_key(user_dto.id),
+                value=user_dto,
+                ttl=get_settings().user_dto_ttl_seconds,
             )
+            return user_dto
         assert False, "unreachable"
 
     async def delete_user(self, user_id: UUID) -> None:
@@ -137,6 +139,6 @@ class UserUseCases:
                 raise UserNotFound(f"User with id {user_id} not found")
             await uow.user_repository.delete(user=user)
             logger.bind(user=user).debug("Deleted user from repo")
-        cache_key = f"user:{user_id}"
-        await self._cache_service.delete(key=cache_key)
+
+        await self._cache_service.delete(key=self._user_cache_key(user_id))
         return None
