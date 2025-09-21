@@ -47,7 +47,15 @@ class Settings(BaseSettings):
     database_pool_echo: bool = False
     pool_size: int = 50
 
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 8
     user_dto_ttl_seconds: int = 60 * 5
+
+    @computed_field  # type: ignore
+    @property
+    def redis_dsn(self) -> str:
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
     @computed_field  # type: ignore
     @property
