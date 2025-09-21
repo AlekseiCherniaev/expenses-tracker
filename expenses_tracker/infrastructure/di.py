@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from expenses_tracker.application.dto.budget import BudgetDTO
 from expenses_tracker.application.dto.user import UserDTO
 from expenses_tracker.application.interfaces.cache_service import ICacheService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
@@ -74,8 +75,11 @@ async def get_expense_use_cases(
 
 async def get_budget_use_cases(
     uow: IUnitOfWork = Depends(get_psycopg_uow),
+    cache_service: ICacheService[BudgetDTO | list[BudgetDTO]] = Depends(
+        get_redis_service
+    ),
 ) -> BudgetUseCases:
-    return BudgetUseCases(unit_of_work=uow)
+    return BudgetUseCases(unit_of_work=uow, cache_service=cache_service)
 
 
 async def get_auth_user_use_cases(

@@ -1,83 +1,10 @@
-from unittest.mock import AsyncMock, Mock
-from uuid import uuid4
-
 import pytest
 from pytest_asyncio import fixture
 
-from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
-from expenses_tracker.application.interfaces.cache_service import ICacheService
-from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
+from expenses_tracker.application.dto.user import UserDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.core.settings import get_settings
-from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExists
-from expenses_tracker.domain.repositories.uow import IUnitOfWork
-from expenses_tracker.domain.repositories.user import IUserRepository
-
-
-@fixture
-def user_entity():
-    return User(
-        id=uuid4(),
-        username="test",
-        email="test@test.com",
-        hashed_password="hashed_password",
-    )
-
-
-@fixture
-def user_dto(user_entity):
-    return UserDTO(
-        id=user_entity.id,
-        username=user_entity.username,
-        email=user_entity.email,
-        is_active=user_entity.is_active,
-        created_at=user_entity.created_at,
-        updated_at=user_entity.updated_at,
-    )
-
-
-@fixture
-def user_create_dto(user_entity):
-    return UserCreateDTO(
-        username=user_entity.username, email=user_entity.email, password="new_password"
-    )
-
-
-@fixture
-def user_update_dto(user_entity):
-    return UserUpdateDTO(id=user_entity.id, email="new_email", password="new_password")
-
-
-@fixture
-def mock_unit_of_work():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    mock_uow.__aenter__ = AsyncMock()
-    mock_uow.__aexit__ = AsyncMock(return_value=False)
-    mock_user_repo = AsyncMock(spec=IUserRepository)
-    mock_uow.__aenter__.return_value.user_repository = mock_user_repo
-    return mock_uow
-
-
-@fixture
-def mock_password_hasher(user_entity):
-    mock_hasher = Mock(spec=IPasswordHasher)
-    mock_hasher.hash.return_value = user_entity.hashed_password
-    mock_hasher.verify.return_value = True
-    return mock_hasher
-
-
-@fixture()
-def random_uuid():
-    return uuid4()
-
-
-@fixture
-def cache_service_mock():
-    mock = AsyncMock(spec=ICacheService)
-    mock.get = AsyncMock(return_value=None)
-    mock.set = AsyncMock()
-    return mock
 
 
 class TestUserUseCases:
