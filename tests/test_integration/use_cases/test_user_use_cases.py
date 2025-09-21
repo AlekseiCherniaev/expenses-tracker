@@ -10,12 +10,15 @@ from expenses_tracker.domain.exceptions.user import UserNotFound, UserAlreadyExi
 
 class TestUserUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work, password_hasher):
+    def setup(self, unit_of_work, password_hasher, cache_service):
         self.user_use_cases = UserUseCases(
-            unit_of_work=unit_of_work, password_hasher=password_hasher
+            unit_of_work=unit_of_work,
+            password_hasher=password_hasher,
+            cache_service=cache_service,
         )
         self.unit_of_work = unit_of_work
         self.password_hasher = password_hasher
+        self.cache_service = cache_service
 
     async def _create_user(self, unique_user_entity):
         async with self.unit_of_work as uow:
@@ -24,7 +27,6 @@ class TestUserUseCases:
     async def test_get_user_success(self, unique_user_entity, unique_user_dto):
         new_user = await self._create_user(unique_user_entity)
         user = await self.user_use_cases.get_user(user_id=new_user.id)
-
         assert isinstance(user, UserDTO)
         assert user == unique_user_dto
 

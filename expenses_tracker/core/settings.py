@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     project_description: str = project_config.get("description", "")
     static_url_path: Path = base_dir / "static"
 
-    environment: Environment = Environment.DEV
+    environment: Environment = Environment.TEST
     log_level: str = "DEBUG"
     fast_api_debug: bool = False
 
@@ -46,6 +46,22 @@ class Settings(BaseSettings):
     database_echo: bool = False
     database_pool_echo: bool = False
     pool_size: int = 50
+
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+    user_dto_ttl_seconds: int = 60 * 30
+    budget_dto_ttl_seconds: int = 60 * 30
+    budgets_list_ttl_seconds: int = 60 * 30
+    expense_dto_ttl_seconds: int = 60 * 30
+    expenses_list_ttl_seconds: int = 60 * 30
+    category_dto_ttl_seconds: int = 60 * 30
+    categories_list_ttl_seconds: int = 60 * 30
+
+    @computed_field  # type: ignore
+    @property
+    def redis_dsn(self) -> str:
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
     @computed_field  # type: ignore
     @property

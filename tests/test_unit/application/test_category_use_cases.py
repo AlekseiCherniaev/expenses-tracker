@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -13,7 +12,6 @@ from expenses_tracker.application.dto.category import (
 from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.exceptions.category import CategoryNotFound
-from expenses_tracker.domain.repositories.uow import IUnitOfWork
 
 
 @fixture
@@ -66,25 +64,12 @@ def category_update_dto(category_entity):
     )
 
 
-@fixture
-def mock_unit_of_work():
-    mock_uow = AsyncMock(spec=IUnitOfWork)
-    mock_uow.__aenter__ = AsyncMock()
-    mock_uow.__aexit__ = AsyncMock(return_value=False)
-    mock_category_repo = AsyncMock()
-    mock_uow.__aenter__.return_value.category_repository = mock_category_repo
-    return mock_uow
-
-
-@fixture()
-def random_uuid():
-    return uuid4()
-
-
 class TestCategoryUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work):
-        self.category_use_cases = CategoryUseCases(unit_of_work=mock_unit_of_work)
+    def setup(self, mock_unit_of_work, cache_service_mock):
+        self.category_use_cases = CategoryUseCases(
+            unit_of_work=mock_unit_of_work, cache_service=cache_service_mock
+        )
         self.mock_unit_of_work = mock_unit_of_work
 
     async def test_get_category_success(

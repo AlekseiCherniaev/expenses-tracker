@@ -13,8 +13,10 @@ from expenses_tracker.domain.exceptions.budget import BudgetNotFound
 
 class TestBudgetUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work):
-        self.budget_use_cases = BudgetUseCases(unit_of_work=unit_of_work)
+    def setup(self, unit_of_work, cache_service):
+        self.budget_use_cases = BudgetUseCases(
+            unit_of_work=unit_of_work, cache_service=cache_service
+        )
         self.unit_of_work = unit_of_work
 
     async def _create_budget(self, budget_entity: Budget) -> Budget:

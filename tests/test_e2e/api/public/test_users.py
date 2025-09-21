@@ -139,3 +139,23 @@ class TestUserApi:
         final_get_response = await async_client.get("/users/me", headers=headers)
 
         assert final_get_response.status_code == status.HTTP_404_NOT_FOUND
+
+    async def test_user_caching(
+        self, async_client, unique_user_create_request, redis_client
+    ):
+        access_token = await self._register_user(
+            async_client, unique_user_create_request
+        )
+        headers = await self._get_auth_headers(access_token)
+        response = await async_client.get("/users/me", headers=headers)
+        user_response = UserResponse(**response.json())
+        cache_key = f"user:{user_response.id}"
+        cached = await redis_client.get(cache_key)
+
+        assert cached is not None, "User must be cached in Redis after first get"
+
+        await redis_client.delete(cache_key)
+        await async_client.get("/users/me", headers=headers)
+        cached2 = await redis_client.get(cache_key)
+
+        assert cached2 is not None, "User must be cached again after cache miss"

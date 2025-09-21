@@ -49,6 +49,27 @@ services:
     networks:
       - common_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 32M
+        reservations:
+          cpus: '0.05'
+          memory: 16M
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - common_network
+
   migrations:
     container_name: migrations
     build: .

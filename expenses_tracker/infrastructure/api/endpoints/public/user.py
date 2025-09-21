@@ -24,7 +24,7 @@ async def get_current_user(
 ) -> UserResponse:
     logger.bind(user_id=user_id).debug("Getting current user...")
     user_dto = await user_use_cases.get_user(user_id=user_id)
-    logger.bind(user=user_dto).debug("Got current user")
+    logger.bind(user_id=user_id).debug("Got current user")
     return UserResponse(**user_dto.__dict__)
 
 
@@ -34,7 +34,7 @@ async def update_current_user(
     user_id: UUID = Depends(get_current_user_id),
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
 ) -> UserResponse:
-    logger.bind(user_data=user_data).debug("Updating current user...")
+    logger.bind(user_id=user_id).debug("Updating current user...")
     update_user_dto = UserUpdateDTO(
         id=user_id,
         is_active=user_data.is_active,
@@ -42,7 +42,7 @@ async def update_current_user(
         password=user_data.password,
     )
     user_dto = await user_use_cases.update_user(user_data=update_user_dto)
-    logger.bind(user=user_dto).debug("Updated current user")
+    logger.bind(user_id=user_id).debug("Updated current user")
     return UserResponse(**user_dto.__dict__)
 
 
