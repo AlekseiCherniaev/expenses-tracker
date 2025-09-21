@@ -4,7 +4,9 @@ from uuid import UUID
 import structlog
 
 from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
+from expenses_tracker.application.interfaces.cache_service import ICacheService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFound
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
@@ -13,9 +15,15 @@ logger = structlog.get_logger(__name__)
 
 
 class UserUseCases:
-    def __init__(self, unit_of_work: IUnitOfWork, password_hasher: IPasswordHasher):
+    def __init__(
+        self,
+        unit_of_work: IUnitOfWork,
+        password_hasher: IPasswordHasher,
+        cache_service: ICacheService[UserDTO],
+    ):
         self._unit_of_work = unit_of_work
         self._password_hasher = password_hasher
+        self._cache_service = cache_service
 
     async def _validate_user_uniqueness(
         self,
@@ -31,12 +39,16 @@ class UserUseCases:
             raise UserAlreadyExists(f"User with username {new_username} already exists")
 
     async def get_user(self, user_id: UUID) -> UserDTO:
+        cache_key = f"user:{user_id}"
+        cached_user = await self._cache_service.get(cache_key)
+        if cached_user:
+            logger.bind(user=cached_user).debug("Retrieved user from cache")
+            return cached_user
         async with self._unit_of_work as uow:
             user = await uow.user_repository.get_by_id(user_id=user_id)
             if not user:
                 raise UserNotFound(f"User with id {user_id} not found")
-            logger.bind(user=user).debug("Retrieved user from repo")
-            return UserDTO(
+            user_dto = UserDTO(
                 username=user.username,
                 email=user.email,
                 is_active=user.is_active,
@@ -44,6 +56,11 @@ class UserUseCases:
                 updated_at=user.updated_at,
                 id=user.id,
             )
+            await self._cache_service.set(
+                cache_key, user_dto, ttl=get_settings().user_dto_ttl_seconds
+            )
+            logger.bind(user=user_dto).debug("Retrieved user from repo and cached")
+            return user_dto
         assert False, "unreachable"
 
     async def get_all_users(self) -> list[UserDTO]:

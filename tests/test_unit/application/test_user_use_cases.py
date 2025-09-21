@@ -5,6 +5,7 @@ import pytest
 from pytest_asyncio import fixture
 
 from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
+from expenses_tracker.application.interfaces.cache_service import ICacheService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.entities.user import User
@@ -70,30 +71,46 @@ def random_uuid():
     return uuid4()
 
 
+@fixture
+def cache_service_mock():
+    mock = AsyncMock(spec=ICacheService)
+    mock.get = AsyncMock(return_value=None)
+    mock.set = AsyncMock()
+    return mock
+
+
 class TestUserUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work, mock_password_hasher):
+    def setup(self, mock_unit_of_work, mock_password_hasher, cache_service_mock):
         self.user_use_cases = UserUseCases(
-            unit_of_work=mock_unit_of_work, password_hasher=mock_password_hasher
+            unit_of_work=mock_unit_of_work,
+            password_hasher=mock_password_hasher,
+            cache_service=cache_service_mock,
         )
         self.mock_unit_of_work = mock_unit_of_work
         self.mock_hasher = mock_password_hasher
+        self.cache_service_mock = cache_service_mock
 
     async def test_get_user_success(self, mock_unit_of_work, user_entity, user_dto):
+        self.cache_service_mock.get.return_value = None
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
         mock_repo.get_by_id.return_value = user_entity
         user = await self.user_use_cases.get_user(user_id=user_entity.id)
 
         assert isinstance(user, UserDTO)
         assert user == user_dto
+        self.cache_service_mock.get.assert_awaited_once_with(f"user:{user_entity.id}")
+        self.cache_service_mock.set.assert_awaited_once()
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
 
     async def test_get_user_not_found(self, mock_unit_of_work, random_uuid):
+        self.cache_service_mock.get.return_value = None
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
         mock_repo.get_by_id.return_value = None
 
         with pytest.raises(UserNotFound):
             await self.user_use_cases.get_user(user_id=random_uuid)
+        self.cache_service_mock.get.assert_awaited_once_with(f"user:{random_uuid}")
         mock_repo.get_by_id.assert_called_once_with(user_id=random_uuid)
 
     async def test__validate_user_uniqueness(self, mock_unit_of_work, user_entity):

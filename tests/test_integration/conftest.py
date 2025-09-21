@@ -27,6 +27,7 @@ from expenses_tracker.domain.entities.budget import Budget
 from expenses_tracker.domain.entities.category import Category
 from expenses_tracker.domain.entities.expense import Expense
 from expenses_tracker.domain.entities.user import User
+from expenses_tracker.infrastructure.cache.dummy_cache_service import DummyCacheService
 from expenses_tracker.infrastructure.database.models import Base
 from expenses_tracker.infrastructure.database.repositories.dummy_uow import (
     DummyUnitOfWork,
@@ -379,3 +380,12 @@ def unit_of_work(request, async_session_factory, postgres_container_sync_url):
             return PsycopgUnitOfWork(dns=postgres_container_sync_url)
         case _:
             raise ValueError(f"Unknown repo {request.param}")
+
+
+@fixture(params=["dummy_cache_service"])
+def cache_service(request):
+    match request.param:
+        case "dummy_cache_service":
+            return DummyCacheService()
+        case _:
+            raise ValueError(f"Unknown cache_service {request.param}")

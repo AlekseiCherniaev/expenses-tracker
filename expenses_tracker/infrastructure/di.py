@@ -9,6 +9,7 @@ from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
+from expenses_tracker.infrastructure.cache.dummy_cache_service import DummyCacheService
 from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
     PsycopgUnitOfWork,
 )
@@ -47,7 +48,11 @@ async def get_psycopg_uow(request: Request) -> PsycopgUnitOfWork:
 async def get_user_use_cases(
     uow: IUnitOfWork = Depends(get_psycopg_uow),
 ) -> UserUseCases:
-    return UserUseCases(unit_of_work=uow, password_hasher=BcryptPasswordHasher())
+    return UserUseCases(
+        unit_of_work=uow,
+        password_hasher=BcryptPasswordHasher(),
+        cache_service=DummyCacheService(),
+    )
 
 
 async def get_category_use_cases(

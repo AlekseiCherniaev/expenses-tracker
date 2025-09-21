@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     database_pool_echo: bool = False
     pool_size: int = 50
 
+    user_dto_ttl_seconds: int = 60 * 5
+
     @computed_field  # type: ignore
     @property
     def async_postgres_url(self) -> str:
