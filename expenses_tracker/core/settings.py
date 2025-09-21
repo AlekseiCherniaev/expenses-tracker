@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     user_dto_ttl_seconds: int = 60 * 30
     budget_dto_ttl_seconds: int = 60 * 30
     budgets_list_ttl_seconds: int = 60 * 30
+    expense_dto_ttl_seconds: int = 60 * 30
+    expenses_list_ttl_seconds: int = 60 * 30
 
     @computed_field  # type: ignore
     @property
