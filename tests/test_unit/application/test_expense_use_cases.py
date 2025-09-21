@@ -66,8 +66,10 @@ def expense_update_dto(expense_entity):
 
 class TestExpenseUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work):
-        self.expense_use_cases = ExpenseUseCases(unit_of_work=mock_unit_of_work)
+    def setup(self, mock_unit_of_work, cache_service_mock):
+        self.expense_use_cases = ExpenseUseCases(
+            unit_of_work=mock_unit_of_work, cache_service=cache_service_mock
+        )
         self.mock_unit_of_work = mock_unit_of_work
 
     async def test_get_expense_success(

@@ -14,8 +14,10 @@ from expenses_tracker.domain.exceptions.expense import ExpenseNotFound
 
 class TestExpenseUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work):
-        self.expense_use_cases = ExpenseUseCases(unit_of_work=unit_of_work)
+    def setup(self, unit_of_work, cache_service):
+        self.expense_use_cases = ExpenseUseCases(
+            unit_of_work=unit_of_work, cache_service=cache_service
+        )
         self.unit_of_work = unit_of_work
 
     async def _create_expense(self, expense_entity: Expense) -> Expense:

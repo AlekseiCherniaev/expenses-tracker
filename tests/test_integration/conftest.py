@@ -3,6 +3,7 @@ from uuid import uuid4, UUID
 
 import redis.asyncio as redis
 from psycopg import AsyncConnection
+from psycopg.rows import dict_row
 from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from testcontainers.postgres import PostgresContainer
@@ -65,10 +66,29 @@ def postgres_container_async_url(postgres_container):
     return postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
 
 
+async def print_pg_connections(conn: AsyncConnection):
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute("""
+            SELECT COUNT(*) AS active_count
+            FROM pg_stat_activity
+            WHERE state = 'active'
+        """)
+        active_count = (await cur.fetchone())["active_count"]
+        await cur.execute("SELECT COUNT(*) AS total_count FROM pg_stat_activity")
+        total_count = (await cur.fetchone())["total_count"]
+        await cur.execute("SHOW max_connections")
+        max_connections = int((await cur.fetchone())["max_connections"])
+
+    print(
+        f"Postgres connections: {active_count} active / {total_count} total / {max_connections} max"
+    )
+
+
 @fixture
 async def async_connection(postgres_container_sync_url):
     conn = await AsyncConnection.connect(postgres_container_sync_url)
     yield conn
+    # await print_pg_connections(conn)
     await conn.close()
 
 
@@ -81,6 +101,7 @@ async def async_engine(postgres_container_async_url):
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
+    await engine.dispose()
 
 
 @fixture
