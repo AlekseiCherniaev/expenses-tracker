@@ -239,6 +239,9 @@ class TestUserUseCases:
 
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
         mock_repo.delete.assert_called_once_with(user=user_entity)
+        self.cache_service_mock.delete.assert_awaited_once_with(
+            key=f"user:{user_entity.id}"
+        )
 
     async def test_delete_user_not_found(self, mock_unit_of_work, random_uuid):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository

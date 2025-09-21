@@ -137,5 +137,6 @@ class UserUseCases:
                 raise UserNotFound(f"User with id {user_id} not found")
             await uow.user_repository.delete(user=user)
             logger.bind(user=user).debug("Deleted user from repo")
-            return None
-        assert False, "unreachable"
+        cache_key = f"user:{user_id}"
+        await self._cache_service.delete(key=cache_key)
+        return None

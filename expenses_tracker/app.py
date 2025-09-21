@@ -12,7 +12,7 @@ from expenses_tracker.infrastructure.api.exception_handlers import (
     register_exception_handlers,
 )
 from expenses_tracker.infrastructure.api.main_router import get_routers
-from expenses_tracker.infrastructure.cache.dummy_cache_service import DummyCacheService
+from expenses_tracker.infrastructure.cache.redis_cache_service import RedisService
 from expenses_tracker.infrastructure.database.db import (
     create_sqlalchemy_engine,
 )
@@ -45,10 +45,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.psycopg_dsn = get_settings().sync_postgres_url
     app.state.token_service = JWTTokenService()
     app.state.password_hasher = BcryptPasswordHasher()
-    app.state.redis_service = DummyCacheService()
+    app.state.redis_service = RedisService()
     logger.info("Startup completed")
     yield
-    # await app.state.redis_service.close()
+    await app.state.redis_service.close()
     logger.debug("Server stopped")
 
 

@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+import redis.asyncio as redis
 from asgi_lifespan import LifespanManager
 from asgi_lifespan._types import ASGIApp
 from fastapi import FastAPI
@@ -25,10 +26,19 @@ def postgres_container():
 
 @fixture(scope="session")
 def redis_container():
-    with RedisContainer() as container:
+    with RedisContainer().with_bind_ports(6379, 6399) as container:
         host = container.get_container_host_ip()
         port = container.get_exposed_port(6379)
-        yield {"host": host, "port": port}
+        yield {"host": host, "port": port, "dsn": f"redis://{host}:{port}/0"}
+
+
+@fixture(scope="function")
+async def redis_client(redis_container):
+    client = redis.Redis.from_url(
+        redis_container["dsn"], encoding="utf-8", decode_responses=True
+    )
+    yield client
+    await client.close()
 
 
 @fixture(scope="session")
