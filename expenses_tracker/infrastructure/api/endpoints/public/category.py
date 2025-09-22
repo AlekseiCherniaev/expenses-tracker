@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from expenses_tracker.application.dto.category import (
     CategoryCreateDTO,
@@ -87,8 +87,8 @@ async def delete_category(
     category_id: UUID,
     _: UUID = Depends(get_current_user_id),
     category_use_cases: CategoryUseCases = Depends(get_category_use_cases),
-) -> None:
+) -> Response:
     logger.bind(category_id=category_id).debug("Deleting category...")
     await category_use_cases.delete_category(category_id=category_id)
     logger.bind(category_id=category_id).debug("Deleted category")
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

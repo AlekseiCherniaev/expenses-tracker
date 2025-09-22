@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from expenses_tracker.application.dto.expense import (
     ExpenseCreateDTO,
@@ -116,8 +116,8 @@ async def update_internal_expense(
 async def delete_internal_expense(
     expense_id: UUID,
     expense_use_cases: ExpenseUseCases = Depends(get_expense_use_cases),
-) -> None:
+) -> Response:
     logger.bind(expense_id=expense_id).debug("Deleting expense...")
     await expense_use_cases.delete_expense(expense_id=expense_id)
     logger.bind(expense_id=expense_id).debug("Deleted expense")
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

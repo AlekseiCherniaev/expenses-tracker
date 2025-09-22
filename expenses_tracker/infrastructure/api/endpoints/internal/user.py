@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from expenses_tracker.application.dto.user import UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.use_cases.user import UserUseCases
@@ -75,8 +75,8 @@ async def update_internal_user(
 async def delete_internal_user(
     user_id: UUID,
     user_use_cases: UserUseCases = Depends(get_user_use_cases),
-) -> None:
+) -> Response:
     logger.bind(user_id=user_id).debug("Deleting user...")
     await user_use_cases.delete_user(user_id=user_id)
     logger.bind(user_id=user_id).debug("Deleted user")
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
