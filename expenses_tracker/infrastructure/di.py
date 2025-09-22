@@ -15,6 +15,7 @@ from expenses_tracker.application.use_cases.budget import BudgetUseCases
 from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
 from expenses_tracker.application.use_cases.user import UserUseCases
+from expenses_tracker.domain.entities.token_payload import TokenPayload
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 from expenses_tracker.infrastructure.database.repositories.psycopg_uow import (
     PsycopgUnitOfWork,
@@ -52,7 +53,7 @@ async def get_psycopg_uow(request: Request) -> PsycopgUnitOfWork:
 
 
 async def get_user_use_cases(
-    uow: IUnitOfWork = Depends(get_psycopg_uow),
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     password_hasher: IPasswordHasher = Depends(get_password_hasher),
     cache_service: ICacheService[UserDTO] = Depends(get_redis_service),
 ) -> UserUseCases:
@@ -64,7 +65,7 @@ async def get_user_use_cases(
 
 
 async def get_category_use_cases(
-    uow: IUnitOfWork = Depends(get_psycopg_uow),
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[CategoryDTO | list[CategoryDTO]] = Depends(
         get_redis_service
     ),
@@ -73,7 +74,7 @@ async def get_category_use_cases(
 
 
 async def get_expense_use_cases(
-    uow: IUnitOfWork = Depends(get_psycopg_uow),
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[ExpenseDTO | list[ExpenseDTO]] = Depends(
         get_redis_service
     ),
@@ -82,7 +83,7 @@ async def get_expense_use_cases(
 
 
 async def get_budget_use_cases(
-    uow: IUnitOfWork = Depends(get_psycopg_uow),
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[BudgetDTO | list[BudgetDTO]] = Depends(
         get_redis_service
     ),
@@ -91,12 +92,14 @@ async def get_budget_use_cases(
 
 
 async def get_auth_user_use_cases(
-    uow: IUnitOfWork = Depends(get_psycopg_uow),
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     token_service: ITokenService = Depends(get_token_service),
     password_hasher: IPasswordHasher = Depends(get_password_hasher),
+    cache_service: ICacheService[TokenPayload] = Depends(get_redis_service),
 ) -> AuthUserUseCases:
     return AuthUserUseCases(
         unit_of_work=uow,
         password_hasher=password_hasher,
         token_service=token_service,
+        cache_service=cache_service,
     )

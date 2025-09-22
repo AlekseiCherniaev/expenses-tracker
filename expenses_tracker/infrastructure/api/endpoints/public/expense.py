@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from expenses_tracker.application.dto.expense import ExpenseCreateDTO, ExpenseUpdateDTO
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
@@ -118,8 +118,8 @@ async def delete_expense(
     expense_id: UUID,
     _: UUID = Depends(get_current_user_id),
     expense_use_cases: ExpenseUseCases = Depends(get_expense_use_cases),
-) -> None:
+) -> Response:
     logger.bind(expense_id=expense_id).debug("Deleting expense...")
     await expense_use_cases.delete_expense(expense_id=expense_id)
     logger.bind(expense_id=expense_id).debug("Deleted expense")
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

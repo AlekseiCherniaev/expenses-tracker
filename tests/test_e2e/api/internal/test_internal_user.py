@@ -160,5 +160,4 @@ class TestInternalUserApi:
             f"/internal/users/delete/{user_created_id}"
         )
 
-        assert response.status_code == 200
-        assert response.json() is None
+        assert response.status_code == 204

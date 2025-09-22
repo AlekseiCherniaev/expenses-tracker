@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -23,6 +24,9 @@ class UserModel(Base):
         String(254), nullable=True, unique=True, index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_refresh_jti: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=None
+    )
 
     categories: Mapped[list["CategoryModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True
@@ -36,11 +40,12 @@ class UserModel(Base):
 
     def to_entity(self) -> User:
         return User(
-            id=self.id,
+            id=UUID(str(self.id)),
             username=self.username,
             email=self.email,
             hashed_password=self.hashed_password,
             is_active=self.is_active,
+            last_refresh_jti=self.last_refresh_jti,
             created_at=self.created_at,
             updated_at=self.updated_at,
         )
@@ -53,6 +58,7 @@ class UserModel(Base):
             email=user.email,
             hashed_password=user.hashed_password,
             is_active=user.is_active,
+            last_refresh_jti=user.last_refresh_jti,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )

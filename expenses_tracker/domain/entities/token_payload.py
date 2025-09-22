@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from expenses_tracker.core.constants import TokenType
+
 
 @dataclass
 class TokenPayload:
@@ -7,3 +9,4 @@ class TokenPayload:
     exp: float
     iat: float
     jti: str
+    type: TokenType

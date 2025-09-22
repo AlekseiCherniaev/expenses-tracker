@@ -10,6 +10,7 @@ class User:
     hashed_password: str
     email: str | None = None
     is_active: bool = False
+    last_refresh_jti: str | None = None
     created_at: datetime = field(default_factory=partial(datetime.now, timezone.utc))
     updated_at: datetime = field(default_factory=partial(datetime.now, timezone.utc))
     id: UUID = field(default_factory=uuid4)

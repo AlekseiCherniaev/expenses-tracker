@@ -87,8 +87,7 @@ class TestUserApi:
         headers = await self._get_auth_headers(access_token)
         response = await async_client.delete("/users/delete", headers=headers)
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         get_response = await async_client.get("/users/me", headers=headers)
 
@@ -134,7 +133,7 @@ class TestUserApi:
 
         delete_response = await async_client.delete("/users/delete", headers=headers)
 
-        assert delete_response.status_code == status.HTTP_200_OK
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
         final_get_response = await async_client.get("/users/me", headers=headers)
 

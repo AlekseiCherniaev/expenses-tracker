@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 3
     refresh_token_expire_days: int = 30
+    clock_skew_seconds: int = 180
 
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432

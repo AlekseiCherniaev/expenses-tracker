@@ -36,13 +36,13 @@ class BudgetModel(Base):
 
     def to_entity(self) -> Budget:
         return Budget(
-            id=self.id,
+            id=UUID(str(self.id)),
             amount=self.amount,
             period=self.period,
             start_date=self.start_date,
             end_date=self.end_date,
-            user_id=self.user_id,
-            category_id=self.category_id,
+            user_id=UUID(str(self.user_id)),
+            category_id=UUID(str(self.category_id)),
             created_at=self.created_at,
             updated_at=self.updated_at,
         )
