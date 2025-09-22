@@ -4,15 +4,22 @@ from uuid import uuid4
 import jwt
 
 from expenses_tracker.application.interfaces.token_service import ITokenService
+from expenses_tracker.core.constants import TokenType
 from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.entities.token_payload import TokenPayload
 from expenses_tracker.domain.exceptions.auth import TokenExpired, InvalidToken
 
 
 class JWTTokenService(ITokenService):
-    def create_token(self, subject: str, expires_delta: timedelta | None = None) -> str:
+    def create_token(
+        self,
+        subject: str,
+        jti: str | None = None,
+        expires_delta: timedelta | None = None,
+        token_type: TokenType = TokenType.ACCESS,
+    ) -> str:
         now = datetime.now(timezone.utc)
-        expire = datetime.now(timezone.utc) + (
+        expire = now + (
             expires_delta
             or timedelta(minutes=get_settings().access_token_expire_minutes)
         )
@@ -20,7 +27,8 @@ class JWTTokenService(ITokenService):
             "sub": subject,
             "exp": expire,
             "iat": now,
-            "jti": str(uuid4()),
+            "jti": jti or str(uuid4()),
+            "type": token_type.value,
         }
         return jwt.encode(
             payload,
