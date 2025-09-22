@@ -43,6 +43,7 @@ class JWTTokenService(ITokenService):
                 get_settings().secret_key,
                 algorithms=[get_settings().algorithm],
             )
+            payload["type"] = TokenType(payload["type"])
             return TokenPayload(**payload)
         except jwt.ExpiredSignatureError as e:
             raise TokenExpired("Token has expired") from e
