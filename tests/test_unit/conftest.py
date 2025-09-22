@@ -34,6 +34,7 @@ def user_dto(user_entity):
         is_active=user_entity.is_active,
         created_at=user_entity.created_at,
         updated_at=user_entity.updated_at,
+        last_refresh_jti=user_entity.last_refresh_jti,
     )
 
 
@@ -87,8 +88,3 @@ def mock_token_service():
     mock_service.create_token.return_value = "test_token"
     mock_service.decode_token.return_value = Mock(sub=str(uuid4()))
     return mock_service
-
-
-@fixture()
-def random_uuid():
-    return uuid4()

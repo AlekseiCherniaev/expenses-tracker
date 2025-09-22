@@ -9,6 +9,7 @@ class UserDTO:
     username: str
     email: str | None
     is_active: bool
+    last_refresh_jti: str | None
     created_at: datetime
     updated_at: datetime
 

@@ -23,6 +23,9 @@ class UserModel(Base):
         String(254), nullable=True, unique=True, index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_refresh_jti: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=None
+    )
 
     categories: Mapped[list["CategoryModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True
