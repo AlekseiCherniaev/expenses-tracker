@@ -11,3 +11,8 @@ class Environment(Enum):
     TEST = "TEST"
     DEV = "DEV"
     PROD = "PROD"
+
+
+class TokenType(Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"
