@@ -267,8 +267,7 @@ class TestCategoryApi:
             f"/categories/delete/{category_id}", headers=headers
         )
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         response_get = await async_client.get(
             f"/categories/get/{category_id}", headers=headers
@@ -325,7 +324,7 @@ class TestCategoryApi:
         delete_response = await async_client.delete(
             f"/categories/delete/{category_create['id']}", headers=headers
         )
-        assert delete_response.status_code == status.HTTP_200_OK
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
         final_get_response = await async_client.get(
             f"/categories/get/{category_create['id']}", headers=headers

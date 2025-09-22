@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import Mock
 
 import pytest
@@ -5,6 +6,7 @@ from pytest_asyncio import fixture
 
 from expenses_tracker.application.dto.token import TokenPairDTO
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
+from expenses_tracker.core.constants import TokenType
 from expenses_tracker.domain.exceptions.auth import (
     InvalidCredentials,
     TokenExpired,
@@ -22,11 +24,18 @@ def token_pair_dto():
 
 class TestAuthUserUseCases:
     @fixture(autouse=True)
-    def setup(self, mock_unit_of_work, mock_password_hasher, mock_token_service):
+    def setup(
+        self,
+        mock_unit_of_work,
+        mock_password_hasher,
+        mock_token_service,
+        cache_service_mock,
+    ):
         self.auth_use_cases = AuthUserUseCases(
             unit_of_work=mock_unit_of_work,
             password_hasher=mock_password_hasher,
             token_service=mock_token_service,
+            cache_service=cache_service_mock,
         )
         self.mock_unit_of_work = mock_unit_of_work
         self.mock_hasher = mock_password_hasher
@@ -41,7 +50,8 @@ class TestAuthUserUseCases:
             expected_access_token,
             expected_refresh_token,
         ]
-        result = self.auth_use_cases._create_tokens_for_user(user_entity)
+        refresh_jti = "test_jti"
+        result = self.auth_use_cases._create_tokens_for_user(user_entity, refresh_jti)
 
         assert isinstance(result, TokenPairDTO)
         assert result.access_token == expected_access_token
@@ -51,6 +61,7 @@ class TestAuthUserUseCases:
         calls = mock_token_service.create_token.call_args_list
         assert calls[0][1]["subject"] == str(user_entity.id)
         assert calls[1][1]["subject"] == str(user_entity.id)
+        assert calls[1][1]["jti"] == refresh_jti
 
     async def test_validate_user_uniqueness_success(
         self, mock_unit_of_work, user_entity
@@ -181,10 +192,19 @@ class TestAuthUserUseCases:
         self, mock_unit_of_work, mock_token_service, user_entity
     ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
-        mock_payload = Mock(sub=str(user_entity.id))
+        refresh_jti = "old_jti"
+        user_entity.last_refresh_jti = refresh_jti
+
+        mock_payload = Mock(
+            sub=str(user_entity.id),
+            jti=refresh_jti,
+            exp=datetime.now().timestamp() + 3600,
+            type=TokenType.REFRESH,
+        )
         mock_token_service.decode_token.return_value = mock_payload
         mock_repo.get_by_id.return_value = user_entity
         mock_token_service.create_token.return_value = "test_token"
+
         result = await self.auth_use_cases.refresh("valid_refresh_token")
 
         assert isinstance(result, TokenPairDTO)
@@ -196,7 +216,12 @@ class TestAuthUserUseCases:
         self, mock_unit_of_work, mock_token_service, random_uuid
     ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
-        mock_payload = Mock(sub=str(random_uuid))
+        mock_payload = Mock(
+            sub=str(random_uuid),
+            jti="some_jti",
+            exp=datetime.now().timestamp() + 3600,
+            type=TokenType.REFRESH,
+        )
         mock_token_service.decode_token.return_value = mock_payload
         mock_repo.get_by_id.return_value = None
 
