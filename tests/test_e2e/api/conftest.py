@@ -1,5 +1,3 @@
-from uuid import UUID, uuid4
-
 from pytest_asyncio import fixture
 
 from expenses_tracker.infrastructure.api.schemas.auth import (
@@ -18,11 +16,6 @@ from expenses_tracker.infrastructure.api.schemas.user import (
     InternalUserCreateRequest,
     InternalUserUpdateRequest,
 )
-
-
-@fixture(autouse=True)
-def random_uuid() -> UUID:
-    return uuid4()
 
 
 @fixture

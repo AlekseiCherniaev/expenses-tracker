@@ -1,5 +1,4 @@
 from datetime import datetime, timezone, timedelta
-from uuid import uuid4, UUID
 
 import redis.asyncio as redis
 from psycopg import AsyncConnection
@@ -130,11 +129,6 @@ async def redis_client(redis_container):
     )
     yield client
     await client.aclose()
-
-
-@fixture(autouse=True)
-def random_uuid() -> UUID:
-    return uuid4()
 
 
 @fixture
