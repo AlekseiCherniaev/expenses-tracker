@@ -34,9 +34,9 @@ class CategoryModel(Base):
 
     def to_entity(self) -> Category:
         return Category(
-            id=self.id,
+            id=UUID(str(self.id)),
             name=self.name,
-            user_id=self.user_id,
+            user_id=UUID(str(self.user_id)),
             color=self.color,
             is_default=self.is_default,
             description=self.description,
