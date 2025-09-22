@@ -28,5 +28,14 @@ class DummyUserRepository(IUserRepository):
         self.users[user.id] = user
         return user
 
+    async def update_last_refresh_jti(self, user_id: UUID, jti: str | None) -> None:
+        user = self.users.get(user_id)
+        if user:
+            user.last_refresh_jti = jti
+            self.users[user_id] = user
+
+    async def get_for_update(self, user_id: UUID) -> User | None:
+        return self.users.get(user_id)
+
     async def delete(self, user: User) -> None:
         self.users.pop(user.id, None)

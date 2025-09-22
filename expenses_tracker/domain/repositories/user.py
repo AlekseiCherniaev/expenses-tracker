@@ -30,5 +30,14 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
+    async def update_last_refresh_jti(self, user_id: UUID, jti: str | None) -> None:
+        pass
+
+    @abstractmethod
+    async def get_for_update(self, user_id: UUID) -> User | None:
+        """row-level lock (SELECT FOR UPDATE)"""
+        pass
+
+    @abstractmethod
     async def delete(self, user: User) -> None:
         pass
