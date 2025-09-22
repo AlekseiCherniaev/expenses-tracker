@@ -31,7 +31,7 @@ def user_dto(user_entity):
         id=user_entity.id,
         username=user_entity.username,
         email=user_entity.email,
-        is_active=user_entity.is_active,
+        email_verified=user_entity.email_verified,
         created_at=user_entity.created_at,
         updated_at=user_entity.updated_at,
         last_refresh_jti=user_entity.last_refresh_jti,

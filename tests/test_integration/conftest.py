@@ -166,7 +166,7 @@ def unique_user_dto(unique_user_entity):
         id=unique_user_entity.id,
         username=unique_user_entity.username,
         email=unique_user_entity.email,
-        is_active=unique_user_entity.is_active,
+        email_verified=unique_user_entity.email_verified,
         created_at=unique_user_entity.created_at,
         updated_at=unique_user_entity.updated_at,
         last_refresh_jti=unique_user_entity.last_refresh_jti,
@@ -179,7 +179,7 @@ def unique_user_update_dto(unique_user_entity):
         id=unique_user_entity.id,
         password="new_password",
         email="new_email@test.com",
-        is_active=True,
+        email_verified=True,
     )
 
 

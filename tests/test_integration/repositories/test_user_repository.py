@@ -21,7 +21,7 @@ def user_entity():
         username="test",
         hashed_password="hashed_test",
         email="testemail@gmail.com",
-        is_active=True,
+        email_verified=True,
     )
 
 
@@ -90,7 +90,7 @@ class TestRepository:
         assert user.username == username
         assert user.email is None
         assert user.hashed_password == hashed_password
-        assert user.is_active is False
+        assert user.email_verified is False
 
     async def test_update_success(self, user_entity):
         new_email = "new_email@example.com"

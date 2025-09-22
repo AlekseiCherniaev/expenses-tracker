@@ -39,7 +39,7 @@ class PsycopgUserRepository(IUserRepository):
         async with self._conn.cursor(row_factory=dict_row) as cursor:
             await cursor.execute(
                 """
-                INSERT INTO users (id, email, username, hashed_password, is_active, last_refresh_jti, created_at, updated_at)
+                INSERT INTO users (id, email, username, hashed_password, email_verified, last_refresh_jti, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
@@ -47,7 +47,7 @@ class PsycopgUserRepository(IUserRepository):
                     user.email,
                     user.username,
                     user.hashed_password,
-                    user.is_active,
+                    user.email_verified,
                     user.last_refresh_jti,
                     user.created_at,
                     user.updated_at,
@@ -63,7 +63,7 @@ class PsycopgUserRepository(IUserRepository):
                 SET username        = %s,
                     email           = %s,
                     hashed_password = %s,
-                    is_active       = %s,
+                    email_verified       = %s,
                     updated_at      = %s,
                     last_refresh_jti= %s
                 WHERE id = %s
@@ -72,7 +72,7 @@ class PsycopgUserRepository(IUserRepository):
                     user.username,
                     user.email,
                     user.hashed_password,
-                    user.is_active,
+                    user.email_verified,
                     user.updated_at,
                     user.last_refresh_jti,
                     str(user.id),
