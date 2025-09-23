@@ -1,12 +1,16 @@
+from uuid import UUID
+
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
+from expenses_tracker.infrastructure.api.dependencies.auth import get_current_user_id
 from expenses_tracker.infrastructure.api.schemas.auth import (
     TokenResponse,
     LoginRequest,
     RefreshRequest,
+    LogoutRequest,
 )
 from expenses_tracker.infrastructure.api.schemas.user import (
     UserCreateRequest,
@@ -68,3 +72,36 @@ async def refresh_token(
         access_token=token_pair.access_token,
         token_type=token_pair.token_type,
     )
+
+
+@router.post("/logout")
+async def logout_user(
+    logout_data: LogoutRequest,
+    auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
+) -> Response:
+    logger.bind(logout_data=logout_data).debug("Logging out user")
+    await auth_use_cases.logout(refresh_token=logout_data.refresh_token)
+    logger.bind(logout_data=logout_data).debug("Logged out user")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/request-verify-email")
+async def request_verify_email(
+    user_id: UUID = Depends(get_current_user_id),
+    auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
+) -> Response:
+    logger.debug("Requesting verify email")
+    await auth_use_cases.request_verify_email(user_id=user_id)
+    logger.debug("Requested verify email")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/verify-email")
+async def verify_email(
+    email_token: str,
+    auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
+) -> Response:
+    logger.debug("Verifying email")
+    await auth_use_cases.verify_email(email_token=email_token)
+    logger.debug("Verified email")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from expenses_tracker.domain.entities.user import User
@@ -45,6 +46,23 @@ class SQLAlchemyUserRepository(IUserRepository):
         model = UserModel.from_entity(user)
         await self._session.merge(model)
         return user
+
+    async def update_last_refresh_jti(self, user_id: UUID, jti: str | None) -> None:
+        await self._session.execute(
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(
+                last_refresh_jti=jti,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+
+    async def get_for_update(self, user_id: UUID) -> User | None:
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.id == user_id).with_for_update()
+        )
+        model = result.scalar_one_or_none()
+        return model.to_entity() if model else None
 
     async def delete(self, user: User) -> None:
         model = await self._session.get(UserModel, user.id)

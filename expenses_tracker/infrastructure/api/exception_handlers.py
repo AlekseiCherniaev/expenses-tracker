@@ -7,6 +7,8 @@ from expenses_tracker.domain.exceptions.auth import (
     TokenExpired,
     InvalidToken,
     Unauthorized,
+    EmailAlreadyVerified,
+    EmailSendingError,
 )
 from expenses_tracker.domain.exceptions.budget import BudgetNotFound
 from expenses_tracker.domain.exceptions.category import CategoryNotFound
@@ -22,6 +24,8 @@ EXCEPTION_STATUS_MAP: dict[type[Exception], int] = {
     CategoryNotFound: status.HTTP_404_NOT_FOUND,
     ExpenseNotFound: status.HTTP_404_NOT_FOUND,
     BudgetNotFound: status.HTTP_404_NOT_FOUND,
+    EmailAlreadyVerified: status.HTTP_400_BAD_REQUEST,
+    EmailSendingError: status.HTTP_500_INTERNAL_SERVER_ERROR,
     InvalidCredentials: status.HTTP_401_UNAUTHORIZED,
     Unauthorized: status.HTTP_401_UNAUTHORIZED,
     TokenExpired: status.HTTP_401_UNAUTHORIZED,

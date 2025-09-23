@@ -8,7 +8,8 @@ class UserDTO:
     id: UUID
     username: str
     email: str | None
-    is_active: bool
+    email_verified: bool
+    last_refresh_jti: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -25,4 +26,4 @@ class UserUpdateDTO:
     id: UUID
     email: str | None = None
     password: str | None = None
-    is_active: bool | None = None
+    email_verified: bool | None = None

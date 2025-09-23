@@ -146,7 +146,7 @@ class TestUserUseCases:
         assert isinstance(user, UserDTO)
         assert user.id == user_dto.id
         assert user.email == user_update_dto.email
-        assert user.is_active == user_dto.is_active
+        assert user.email_verified == user_dto.email_verified
         mock_repo.get_by_id.assert_called_once_with(user_id=user_entity.id)
         mock_password_hasher.hash.assert_called_once_with(
             password=user_update_dto.password

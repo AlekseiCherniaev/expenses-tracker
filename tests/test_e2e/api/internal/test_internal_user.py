@@ -34,7 +34,7 @@ class TestInternalUserApi:
         assert UUID(user_create["id"])
         assert user_create["username"] == unique_user_create_request.username
         assert user_create["email"] == unique_user_create_request.email
-        assert user_create["is_active"] is False
+        assert user_create["email_verified"] is False
         assert (
             before_create
             <= datetime.fromisoformat(user_create["created_at"])
@@ -78,7 +78,7 @@ class TestInternalUserApi:
         assert user_get["id"] == user_created_id
         assert user_get["username"] == unique_user_create_request.username
         assert user_get["email"] == unique_user_create_request.email
-        assert user_get["is_active"] is False
+        assert user_get["email_verified"] is False
         assert (
             before_create
             <= datetime.fromisoformat(user_get["created_at"])
@@ -110,7 +110,7 @@ class TestInternalUserApi:
         assert created_user["id"] == user_create["id"]
         assert created_user["username"] == unique_user_create_request.username
         assert created_user["email"] == unique_user_create_request.email
-        assert created_user["is_active"] is False
+        assert created_user["email_verified"] is False
         assert (
             before_create
             <= datetime.fromisoformat(created_user["created_at"])
@@ -139,7 +139,7 @@ class TestInternalUserApi:
         assert user_update["id"] == user_create["id"]
         assert user_update["username"] == unique_user_create_request.username
         assert user_update["email"] == user_update_request.email
-        assert user_update["is_active"] == user_update_request.is_active
+        assert user_update["email_verified"] == user_update_request.email_verified
         assert (
             before_create
             <= datetime.fromisoformat(user_update["created_at"])
@@ -160,5 +160,4 @@ class TestInternalUserApi:
             f"/internal/users/delete/{user_created_id}"
         )
 
-        assert response.status_code == 200
-        assert response.json() is None
+        assert response.status_code == 204

@@ -5,6 +5,7 @@ from pytest_asyncio import fixture
 
 from expenses_tracker.application.dto.user import UserDTO, UserCreateDTO, UserUpdateDTO
 from expenses_tracker.application.interfaces.cache_service import ICacheService
+from expenses_tracker.application.interfaces.email_service import IEmailService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.domain.entities.user import User
@@ -31,9 +32,10 @@ def user_dto(user_entity):
         id=user_entity.id,
         username=user_entity.username,
         email=user_entity.email,
-        is_active=user_entity.is_active,
+        email_verified=user_entity.email_verified,
         created_at=user_entity.created_at,
         updated_at=user_entity.updated_at,
+        last_refresh_jti=user_entity.last_refresh_jti,
     )
 
 
@@ -89,6 +91,8 @@ def mock_token_service():
     return mock_service
 
 
-@fixture()
-def random_uuid():
-    return uuid4()
+@fixture
+def mock_email_service():
+    mock_service = Mock(spec=IEmailService)
+    mock_service.send_verification_email.return_value = None
+    return mock_service

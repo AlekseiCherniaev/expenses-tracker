@@ -32,11 +32,11 @@ class ExpenseModel(Base):
 
     def to_entity(self) -> Expense:
         return Expense(
-            id=self.id,
+            id=UUID(str(self.id)),
             amount=self.amount,
             date=self.date,
-            user_id=self.user_id,
-            category_id=self.category_id,
+            user_id=UUID(str(self.user_id)),
+            category_id=UUID(str(self.category_id)),
             description=self.description,
             created_at=self.created_at,
             updated_at=self.updated_at,

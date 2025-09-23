@@ -32,7 +32,7 @@ def test_user():
         username="testuser",
         email="test@example.com",
         hashed_password="hashed_password",
-        is_active=True,
+        email_verified=True,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )

@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from expenses_tracker.application.dto.budget import (
     BudgetCreateDTO,
@@ -151,11 +151,11 @@ async def update_internal_budget(
 async def delete_internal_budget(
     budget_id: UUID,
     budget_use_cases: BudgetUseCases = Depends(get_budget_use_cases),
-) -> None:
+) -> Response:
     logger.bind(budget_id=budget_id).debug("Deleting budget...")
     await budget_use_cases.delete_budget(budget_id=budget_id)
     logger.bind(budget_id=budget_id).debug("Deleted budget")
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/total-amount/{user_id}")

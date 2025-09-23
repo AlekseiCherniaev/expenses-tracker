@@ -30,9 +30,10 @@ class UserUseCases:
         return UserDTO(
             username=user.username,
             email=user.email,
-            is_active=user.is_active,
+            email_verified=user.email_verified,
             created_at=user.created_at,
             updated_at=user.updated_at,
+            last_refresh_jti=user.last_refresh_jti,
             id=user.id,
         )
 
@@ -114,8 +115,8 @@ class UserUseCases:
             if user_data.email and user_data.email != user.email:
                 await self._validate_user_uniqueness(uow=uow, new_email=user_data.email)
                 user.email = user_data.email
-            if user_data.is_active is not None:
-                user.is_active = user_data.is_active
+            if user_data.email_verified is not None:
+                user.email_verified = user_data.email_verified
             if user_data.password is not None:
                 user.hashed_password = self._password_hasher.hash(
                     password=user_data.password

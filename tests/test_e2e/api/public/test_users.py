@@ -28,7 +28,7 @@ class TestUserApi:
         assert response.status_code == status.HTTP_200_OK
         assert user_response.username == unique_user_create_request.username
         assert user_response.email == unique_user_create_request.email
-        assert user_response.is_active is False
+        assert user_response.email_verified is False
 
     async def test_get_current_user_unauthorized(self, async_client):
         response = await async_client.get("/users/me")
@@ -59,14 +59,14 @@ class TestUserApi:
 
         assert response.status_code == status.HTTP_200_OK
         assert user_response.email == user_update_request.email
-        assert user_response.is_active == user_update_request.is_active
+        assert user_response.email_verified == user_update_request.email_verified
         assert user_response.username == unique_user_create_request.username
 
         get_response = await async_client.get("/users/me", headers=headers)
         updated_user = UserResponse(**get_response.json())
 
         assert updated_user.email == user_update_request.email
-        assert updated_user.is_active == user_update_request.is_active
+        assert updated_user.email_verified == user_update_request.email_verified
 
     async def test_update_current_user_unauthorized(
         self, async_client, user_update_request
@@ -87,8 +87,7 @@ class TestUserApi:
         headers = await self._get_auth_headers(access_token)
         response = await async_client.delete("/users/delete", headers=headers)
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         get_response = await async_client.get("/users/me", headers=headers)
 
@@ -129,12 +128,12 @@ class TestUserApi:
 
         assert update_response.status_code == status.HTTP_200_OK
         assert updated_user.email == user_update_request.email
-        assert updated_user.is_active == user_update_request.is_active
+        assert updated_user.email_verified == user_update_request.email_verified
         assert updated_user.username == original_user.username
 
         delete_response = await async_client.delete("/users/delete", headers=headers)
 
-        assert delete_response.status_code == status.HTTP_200_OK
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
         final_get_response = await async_client.get("/users/me", headers=headers)
 

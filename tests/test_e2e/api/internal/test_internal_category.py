@@ -217,8 +217,7 @@ class TestInternalCategoryApi:
             f"/internal/categories/delete/{category_id}"
         )
 
-        assert response.status_code == 200
-        assert response.json() is None
+        assert response.status_code == 204
 
         response_get = await async_client.get(f"/internal/categories/get/{category_id}")
         assert response_get.status_code == 404

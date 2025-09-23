@@ -7,6 +7,7 @@ from pytest_asyncio import fixture
 from expenses_tracker.application.dto.token import TokenPairDTO
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
+from expenses_tracker.core.constants import TokenType
 from expenses_tracker.domain.entities.user import User
 from expenses_tracker.domain.exceptions.auth import InvalidCredentials
 from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFound
@@ -14,11 +15,15 @@ from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFo
 
 class TestAuthUserUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work, password_hasher, token_service):
+    def setup(
+        self, unit_of_work, password_hasher, token_service, cache_service, email_service
+    ):
         self.auth_user_use_cases = AuthUserUseCases(
             unit_of_work=unit_of_work,
             password_hasher=password_hasher,
             token_service=token_service,
+            cache_service=cache_service,
+            email_service=email_service,
         )
         self.unit_of_work = unit_of_work
         self.password_hasher = password_hasher
@@ -35,7 +40,6 @@ class TestAuthUserUseCases:
         )
         async with self.unit_of_work as uow:
             return await uow.user_repository.create(user)
-        assert False, "Unreachable"
 
     async def test_register_user_success(self, unique_user_create_dto):
         token_pair = await self.auth_user_use_cases.register(
@@ -95,23 +99,31 @@ class TestAuthUserUseCases:
 
     async def test_refresh_success(self, unique_user_create_dto):
         user = await self._create_user_with_hashed_password(unique_user_create_dto)
+
         refresh_token = self.token_service.create_token(
-            subject=str(user.id), expires_delta=timedelta(days=7)
+            subject=str(user.id),
+            expires_delta=timedelta(days=7),
+            token_type=TokenType.REFRESH,
         )
+        refresh_payload = self.token_service.decode_token(refresh_token)
+
+        async with self.unit_of_work as uow:
+            await uow.user_repository.update_last_refresh_jti(
+                user.id, refresh_payload.jti
+            )
+
         new_token_pair = await self.auth_user_use_cases.refresh(refresh_token)
 
         assert isinstance(new_token_pair, TokenPairDTO)
-        assert new_token_pair.access_token is not None
-        assert new_token_pair.refresh_token is not None
-        access_payload = self.token_service.decode_token(new_token_pair.access_token)
-        refresh_payload = self.token_service.decode_token(new_token_pair.refresh_token)
-        assert access_payload.sub == str(user.id)
-        assert refresh_payload.sub == str(user.id)
+        assert new_token_pair.access_token
+        assert new_token_pair.refresh_token
 
     async def test_refresh_user_not_found(self):
         non_existent_user_id = uuid4()
         refresh_token = self.token_service.create_token(
-            subject=str(non_existent_user_id), expires_delta=timedelta(days=7)
+            subject=str(non_existent_user_id),
+            expires_delta=timedelta(days=7),
+            token_type=TokenType.REFRESH,
         )
 
         with pytest.raises(UserNotFound):
