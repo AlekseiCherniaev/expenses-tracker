@@ -6,13 +6,17 @@ import structlog
 from expenses_tracker.application.dto.token import TokenPairDTO
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.interfaces.cache_service import ICacheService
+from expenses_tracker.application.interfaces.email_service import IEmailService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.core.constants import TokenType
 from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.entities.token_payload import TokenPayload
 from expenses_tracker.domain.entities.user import User
-from expenses_tracker.domain.exceptions.auth import InvalidCredentials
+from expenses_tracker.domain.exceptions.auth import (
+    InvalidCredentials,
+    EmailAlreadyVerified,
+)
 from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFound
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
 
@@ -25,11 +29,13 @@ class AuthUserUseCases:
         unit_of_work: IUnitOfWork,
         password_hasher: IPasswordHasher,
         token_service: ITokenService,
+        email_service: IEmailService,
         cache_service: ICacheService[TokenPayload],
     ):
         self._unit_of_work = unit_of_work
         self._password_hasher = password_hasher
         self._token_service = token_service
+        self.email_service = email_service
         self._cache_service = cache_service
 
     @staticmethod
@@ -156,4 +162,52 @@ class AuthUserUseCases:
                 raise UserNotFound(f"User with id {user_id} not found")
 
             await uow.user_repository.update_last_refresh_jti(user_id=user.id, jti=None)
+        return None
+
+    async def request_verify_email(self, user_id: UUID) -> None:
+        async with self._unit_of_work as uow:
+            user = await uow.user_repository.get_by_id(user_id=user_id)
+            if not user:
+                raise UserNotFound(f"User with id {user_id} not found")
+
+            if user.email is None:
+                raise InvalidCredentials("User does not have an email to verify")
+
+            if user.email_verified:
+                raise EmailAlreadyVerified("Email is already verified")
+
+            email_token = self._token_service.create_token(
+                subject=str(user.id),
+                expires_delta=timedelta(
+                    hours=get_settings().email_verification_token_expire_hours
+                ),
+                token_type=TokenType.EMAIL_VERIFICATION,
+            )
+
+            await self.email_service.send_verification_email(
+                to=user.email, token=email_token
+            )
+            logger.bind(user_id=user.id).debug("Sent email verification email")
+        return None
+
+    async def verify_email(self, email_token: str) -> None:
+        payload = self._token_service.decode_token(email_token)
+
+        if payload.type != TokenType.EMAIL_VERIFICATION:
+            raise InvalidCredentials(
+                "Provided token is not an email verification token"
+            )
+
+        async with self._unit_of_work as uow:
+            user_id = UUID(payload.sub)
+            user = await uow.user_repository.get_by_id(user_id=user_id)
+            if not user:
+                raise UserNotFound(f"User with id {user_id} not found")
+
+            if user.email_verified:
+                raise EmailAlreadyVerified("Email is already verified")
+
+            user.email_verified = True
+            await uow.user_repository.update(user=user)
+            logger.bind(user_id=user.id).debug("Verified user email")
         return None

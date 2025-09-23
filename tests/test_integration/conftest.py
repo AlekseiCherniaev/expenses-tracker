@@ -44,6 +44,9 @@ from expenses_tracker.infrastructure.database.repositories.sqlalchemy_uow import
 from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
+from expenses_tracker.infrastructure.security.fastapi_email_service import (
+    FastapiEmailService,
+)
 from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 
@@ -425,5 +428,14 @@ def cache_service(request, redis_container):
             return DummyCacheService()
         case "redis_cache_service":
             return RedisService(url=redis_container["dsn"])
+        case _:
+            raise ValueError(f"Unknown cache_service {request.param}")
+
+
+@fixture(params=["fastapi_email_service"])
+def email_service(request, redis_container):
+    match request.param:
+        case "fastapi_email_service":
+            return FastapiEmailService()
         case _:
             raise ValueError(f"Unknown cache_service {request.param}")

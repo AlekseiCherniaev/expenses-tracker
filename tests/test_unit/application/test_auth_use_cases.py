@@ -30,12 +30,14 @@ class TestAuthUserUseCases:
         mock_password_hasher,
         mock_token_service,
         cache_service_mock,
+        mock_email_service,
     ):
         self.auth_use_cases = AuthUserUseCases(
             unit_of_work=mock_unit_of_work,
             password_hasher=mock_password_hasher,
             token_service=mock_token_service,
             cache_service=cache_service_mock,
+            email_service=mock_email_service,
         )
         self.mock_unit_of_work = mock_unit_of_work
         self.mock_hasher = mock_password_hasher
