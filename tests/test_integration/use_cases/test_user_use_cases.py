@@ -115,7 +115,7 @@ class TestUserUseCases:
 
         assert isinstance(updated_user, UserDTO)
         assert updated_user.email == unique_user_update_dto.email
-        assert updated_user.is_active == unique_user_update_dto.is_active
+        assert updated_user.email_verified == unique_user_update_dto.email_verified
         assert before_create <= updated_user.created_at <= after_create
         assert before_update <= updated_user.updated_at <= after_update
 

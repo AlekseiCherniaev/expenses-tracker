@@ -8,6 +8,7 @@ from expenses_tracker.application.dto.category import CategoryDTO
 from expenses_tracker.application.dto.expense import ExpenseDTO
 from expenses_tracker.application.dto.user import UserDTO
 from expenses_tracker.application.interfaces.cache_service import ICacheService
+from expenses_tracker.application.interfaces.email_service import IEmailService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
@@ -35,6 +36,10 @@ def get_redis_service(request: Request) -> ICacheService[Any]:
 
 def get_password_hasher(request: Request) -> IPasswordHasher:
     return request.app.state.password_hasher  # type: ignore
+
+
+def get_email_service(request: Request) -> IEmailService:
+    return request.app.state.email_service  # type: ignore
 
 
 async def get_sqlalchemy_uow(request: Request) -> SqlAlchemyUnitOfWork:
@@ -95,6 +100,7 @@ async def get_auth_user_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     token_service: ITokenService = Depends(get_token_service),
     password_hasher: IPasswordHasher = Depends(get_password_hasher),
+    email_service: IEmailService = Depends(get_email_service),
     cache_service: ICacheService[TokenPayload] = Depends(get_redis_service),
 ) -> AuthUserUseCases:
     return AuthUserUseCases(
@@ -102,4 +108,5 @@ async def get_auth_user_use_cases(
         password_hasher=password_hasher,
         token_service=token_service,
         cache_service=cache_service,
+        email_service=email_service,
     )

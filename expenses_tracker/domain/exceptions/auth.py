@@ -15,3 +15,11 @@ class InvalidCredentials(DomainException):
 
 class Unauthorized(DomainException):
     pass
+
+
+class EmailAlreadyVerified(DomainException):
+    pass
+
+
+class EmailSendingError(DomainException):
+    pass

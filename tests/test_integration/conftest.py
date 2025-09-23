@@ -44,6 +44,9 @@ from expenses_tracker.infrastructure.database.repositories.sqlalchemy_uow import
 from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
+from expenses_tracker.infrastructure.security.fastapi_email_service import (
+    FastapiEmailService,
+)
 from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 
@@ -166,7 +169,7 @@ def unique_user_dto(unique_user_entity):
         id=unique_user_entity.id,
         username=unique_user_entity.username,
         email=unique_user_entity.email,
-        is_active=unique_user_entity.is_active,
+        email_verified=unique_user_entity.email_verified,
         created_at=unique_user_entity.created_at,
         updated_at=unique_user_entity.updated_at,
         last_refresh_jti=unique_user_entity.last_refresh_jti,
@@ -179,7 +182,7 @@ def unique_user_update_dto(unique_user_entity):
         id=unique_user_entity.id,
         password="new_password",
         email="new_email@test.com",
-        is_active=True,
+        email_verified=True,
     )
 
 
@@ -425,5 +428,14 @@ def cache_service(request, redis_container):
             return DummyCacheService()
         case "redis_cache_service":
             return RedisService(url=redis_container["dsn"])
+        case _:
+            raise ValueError(f"Unknown cache_service {request.param}")
+
+
+@fixture(params=["fastapi_email_service"])
+def email_service(request, redis_container):
+    match request.param:
+        case "fastapi_email_service":
+            return FastapiEmailService()
         case _:
             raise ValueError(f"Unknown cache_service {request.param}")

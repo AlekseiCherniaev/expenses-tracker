@@ -19,6 +19,9 @@ from expenses_tracker.infrastructure.database.db import (
 from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
+from expenses_tracker.infrastructure.security.fastapi_email_service import (
+    FastapiEmailService,
+)
 from expenses_tracker.infrastructure.security.jwt_token_service import JWTTokenService
 
 logger = structlog.get_logger(__name__)
@@ -46,6 +49,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.token_service = JWTTokenService()
     app.state.password_hasher = BcryptPasswordHasher()
     app.state.redis_service = RedisService()
+    app.state.email_service = FastapiEmailService()
     logger.info("Startup completed")
     yield
     await app.state.sqlalchemy_engine.dispose()

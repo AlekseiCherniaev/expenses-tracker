@@ -34,7 +34,7 @@ def user_update_request(random_uuid):
         id=random_uuid,
         password="new_password",
         email="new_email@test.com",
-        is_active=True,
+        email_verified=True,
     )
 
 

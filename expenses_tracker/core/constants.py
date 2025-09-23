@@ -16,3 +16,4 @@ class Environment(Enum):
 class TokenType(Enum):
     ACCESS = "access"
     REFRESH = "refresh"
+    EMAIL_VERIFICATION = "email_verification"

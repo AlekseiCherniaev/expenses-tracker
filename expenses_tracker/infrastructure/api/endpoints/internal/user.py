@@ -62,7 +62,7 @@ async def update_internal_user(
     logger.bind(user_data=user_data).debug("Updating user...")
     update_user_dto = UserUpdateDTO(
         id=user_data.id,
-        is_active=user_data.is_active,
+        email_verified=user_data.email_verified,
         email=user_data.email,
         password=user_data.password,
     )

@@ -15,12 +15,15 @@ from expenses_tracker.domain.exceptions.user import UserAlreadyExists, UserNotFo
 
 class TestAuthUserUseCases:
     @fixture(autouse=True)
-    def setup(self, unit_of_work, password_hasher, token_service, cache_service):
+    def setup(
+        self, unit_of_work, password_hasher, token_service, cache_service, email_service
+    ):
         self.auth_user_use_cases = AuthUserUseCases(
             unit_of_work=unit_of_work,
             password_hasher=password_hasher,
             token_service=token_service,
             cache_service=cache_service,
+            email_service=email_service,
         )
         self.unit_of_work = unit_of_work
         self.password_hasher = password_hasher

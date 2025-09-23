@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import String, Boolean
+from sqlalchemy import String, Boolean, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from expenses_tracker.domain.entities.user import User
@@ -23,7 +23,9 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(
         String(254), nullable=True, unique=True, index=True
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false"), nullable=False
+    )
     last_refresh_jti: Mapped[str | None] = mapped_column(
         String, nullable=True, default=None
     )
@@ -44,7 +46,7 @@ class UserModel(Base):
             username=self.username,
             email=self.email,
             hashed_password=self.hashed_password,
-            is_active=self.is_active,
+            email_verified=self.email_verified,
             last_refresh_jti=self.last_refresh_jti,
             created_at=self.created_at,
             updated_at=self.updated_at,
@@ -57,7 +59,7 @@ class UserModel(Base):
             username=user.username,
             email=user.email,
             hashed_password=user.hashed_password,
-            is_active=user.is_active,
+            email_verified=user.email_verified,
             last_refresh_jti=user.last_refresh_jti,
             created_at=user.created_at,
             updated_at=user.updated_at,

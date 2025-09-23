@@ -13,7 +13,7 @@ class TestUser:
         assert user.username == username
         assert user.hashed_password == hashed_password
         assert isinstance(user.id, UUID)
-        assert user.is_active is False
+        assert user.email_verified is False
         assert user.email is None
         assert isinstance(user.created_at, datetime)
         assert isinstance(user.updated_at, datetime)
