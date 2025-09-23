@@ -11,6 +11,8 @@ from expenses_tracker.infrastructure.api.schemas.auth import (
     LoginRequest,
     RefreshRequest,
     LogoutRequest,
+    PasswordResetRequest,
+    NewPasswordRequest,
 )
 from expenses_tracker.infrastructure.api.schemas.user import (
     UserCreateRequest,
@@ -96,7 +98,7 @@ async def request_verify_email(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/verify-email")
+@router.put("/verify-email")
 async def verify_email(
     email_token: str,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
@@ -104,4 +106,33 @@ async def verify_email(
     logger.debug("Verifying email")
     await auth_use_cases.verify_email(email_token=email_token)
     logger.debug("Verified email")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/request-reset-password")
+async def request_reset_password(
+    password_reset_request_data: PasswordResetRequest,
+    auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
+) -> Response:
+    logger.bind(email=password_reset_request_data.email).debug(
+        "Requesting password reset"
+    )
+    await auth_use_cases.request_password_reset(email=password_reset_request_data.email)
+    logger.bind(email=password_reset_request_data.email).debug(
+        "Requested password reset"
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/reset-password")
+async def reset_password(
+    password_token: str,
+    new_password_data: NewPasswordRequest,
+    auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
+) -> Response:
+    logger.debug("Resetting password")
+    await auth_use_cases.reset_password(
+        password_reset_token=password_token, new_password=new_password_data.new_password
+    )
+    logger.debug("Reset password")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
