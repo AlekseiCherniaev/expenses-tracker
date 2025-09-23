@@ -19,3 +19,7 @@ class Unauthorized(DomainException):
 
 class EmailAlreadyVerified(DomainException):
     pass
+
+
+class EmailSendingError(DomainException):
+    pass
