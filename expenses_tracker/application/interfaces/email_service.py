@@ -5,3 +5,7 @@ class IEmailService(ABC):
     @abstractmethod
     async def send_verification_email(self, to: str, token: str) -> None:
         pass
+
+    @abstractmethod
+    async def send_password_reset_email(self, to: str, token: str) -> None:
+        pass

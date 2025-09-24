@@ -31,10 +31,7 @@ def unique_user_create_request(random_uuid):
 @fixture
 def user_update_request(random_uuid):
     return InternalUserUpdateRequest(
-        id=random_uuid,
-        password="new_password",
-        email="new_email@test.com",
-        email_verified=True,
+        id=random_uuid, password="new_password", email="new_email@test.com"
     )
 
 

@@ -17,3 +17,4 @@ class TokenType(Enum):
     ACCESS = "access"
     REFRESH = "refresh"
     EMAIL_VERIFICATION = "email_verification"
+    RESET_PASSWORD = "password_reset"

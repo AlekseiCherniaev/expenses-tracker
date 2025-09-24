@@ -139,7 +139,6 @@ class TestInternalUserApi:
         assert user_update["id"] == user_create["id"]
         assert user_update["username"] == unique_user_create_request.username
         assert user_update["email"] == user_update_request.email
-        assert user_update["email_verified"] == user_update_request.email_verified
         assert (
             before_create
             <= datetime.fromisoformat(user_update["created_at"])

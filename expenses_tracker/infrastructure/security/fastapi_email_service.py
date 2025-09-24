@@ -46,3 +46,26 @@ class FastapiEmailService(IEmailService):
         except Exception as e:
             logger.bind(to=to, e=e).error("Failed to send email")
             raise EmailSendingError(f"Failed to send verification email to {to}") from e
+
+    async def send_password_reset_email(self, to: EmailStr, token: str) -> None:
+        reset_link = f"https://{get_settings().domain}/auth/reset-password?password_token={token}"
+
+        message = MessageSchema(
+            subject="Reset your password",
+            recipients=[to],
+            body=f"""
+                <p>Hello!</p>
+                <p>Please click the link below to reset your password:</p>
+                <a href="{reset_link}">Reset Password</a>
+            """,
+            subtype=MessageType.html,
+        )
+
+        try:
+            await self.fastmail.send_message(message)
+            logger.bind(to=to).info("Password reset email sent")
+        except Exception as e:
+            logger.bind(to=to, e=e).error("Failed to send email")
+            raise EmailSendingError(
+                f"Failed to send password reset email to {to}"
+            ) from e

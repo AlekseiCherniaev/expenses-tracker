@@ -211,3 +211,49 @@ class AuthUserUseCases:
             await uow.user_repository.update(user=user)
             logger.bind(user_id=user.id).debug("Verified user email")
         return None
+
+    async def request_password_reset(self, email: str) -> None:
+        async with self._unit_of_work as uow:
+            user = await uow.user_repository.get_by_email(email)
+            if not user:
+                raise UserNotFound(f"User with email {email} not found")
+
+            if user.email is None or user.email_verified is False:
+                raise InvalidCredentials(
+                    "User does not have an verified email to reset password"
+                )
+
+            password_reset_token = self._token_service.create_token(
+                subject=str(user.id),
+                expires_delta=timedelta(
+                    hours=get_settings().password_reset_token_expire_hours
+                ),
+                token_type=TokenType.RESET_PASSWORD,
+            )
+
+            await self.email_service.send_password_reset_email(
+                to=user.email, token=password_reset_token
+            )
+            logger.bind(user_id=user.id).debug("Sent password reset email")
+        return None
+
+    async def reset_password(
+        self, password_reset_token: str, new_password: str
+    ) -> None:
+        payload = self._token_service.decode_token(password_reset_token)
+
+        if payload.type != TokenType.RESET_PASSWORD:
+            raise InvalidCredentials("Provided token is not a password reset token")
+
+        async with self._unit_of_work as uow:
+            user_id = UUID(payload.sub)
+            user = await uow.user_repository.get_by_id(user_id=user_id)
+            if not user:
+                raise UserNotFound(f"User with id {user_id} not found")
+
+            hashed_password = self._password_hasher.hash(password=new_password)
+            user.hashed_password = hashed_password
+            user.last_refresh_jti = None  # Invalidate all existing refresh tokens
+            await uow.user_repository.update(user=user)
+            logger.bind(user_id=user.id).debug("Reset user password")
+        return None

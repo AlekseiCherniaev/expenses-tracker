@@ -7,7 +7,6 @@ from pydantic import BaseModel, EmailStr
 class UserUpdateRequest(BaseModel):
     email: EmailStr | None = None
     password: str | None = None
-    email_verified: bool | None = None
 
 
 class UserResponse(BaseModel):
