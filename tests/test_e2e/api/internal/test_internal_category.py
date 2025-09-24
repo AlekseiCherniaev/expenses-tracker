@@ -10,7 +10,7 @@ from expenses_tracker.infrastructure.api.endpoints.internal.category import (
 class TestInternalCategoryApi:
     async def _create_user(self, async_client, unique_user_create_request) -> UUID:
         response = await async_client.post(
-            "/internal/users/create", json=unique_user_create_request.model_dump()
+            "/api/internal/users/create", json=unique_user_create_request.model_dump()
         )
 
         assert response.status_code == 200
@@ -25,7 +25,7 @@ class TestInternalCategoryApi:
         before_create = datetime.now(timezone.utc)
         category_create_request.user_id = user_id
         response = await async_client.post(
-            "/internal/categories/create", json=category_create_request.model_dump()
+            "/api/internal/categories/create", json=category_create_request.model_dump()
         )
         after_create = datetime.now(timezone.utc)
 
@@ -74,7 +74,7 @@ class TestInternalCategoryApi:
         )
 
         category_id = category_create["id"]
-        response = await async_client.get(f"/internal/categories/get/{category_id}")
+        response = await async_client.get(f"/api/internal/categories/get/{category_id}")
         category_get = response.json()
 
         assert response.status_code == 200
@@ -98,7 +98,7 @@ class TestInternalCategoryApi:
         )
 
     async def test_get_category_not_found(self, async_client):
-        response = await async_client.get(f"/internal/categories/get/{uuid4()}")
+        response = await async_client.get(f"/api/internal/categories/get/{uuid4()}")
 
         assert response.status_code == 404
         assert "Category with id" in response.json()["detail"]
@@ -114,7 +114,9 @@ class TestInternalCategoryApi:
             async_client, unique_internal_category_create_request, user_id
         )
 
-        response = await async_client.get(f"/internal/categories/get-by-user/{user_id}")
+        response = await async_client.get(
+            f"/api/internal/categories/get-by-user/{user_id}"
+        )
         categories_get = response.json()
 
         assert response.status_code == 200
@@ -141,7 +143,9 @@ class TestInternalCategoryApi:
     ):
         user_id = await self._create_user(async_client, unique_user_create_request)
 
-        response = await async_client.get(f"/internal/categories/get-by-user/{user_id}")
+        response = await async_client.get(
+            f"/api/internal/categories/get-by-user/{user_id}"
+        )
         categories_get = response.json()
 
         assert response.status_code == 200
@@ -149,7 +153,9 @@ class TestInternalCategoryApi:
         assert len(categories_get) == 0
 
     async def test_get_categories_by_user_not_found(self, async_client):
-        response = await async_client.get(f"/internal/categories/get-by-user/{uuid4()}")
+        response = await async_client.get(
+            f"/api/internal/categories/get-by-user/{uuid4()}"
+        )
 
         assert response.status_code == 200
         assert response.json() == []
@@ -168,7 +174,7 @@ class TestInternalCategoryApi:
         before_update = datetime.now(timezone.utc)
         category_update_request.id = category_create["id"]
         response = await async_client.put(
-            "/internal/categories/update", json=category_update_request.model_dump()
+            "/api/internal/categories/update", json=category_update_request.model_dump()
         )
         after_update = datetime.now(timezone.utc)
         category_update = response.json()
@@ -196,7 +202,7 @@ class TestInternalCategoryApi:
     ):
         category_update_request.id = str(uuid4())
         response = await async_client.put(
-            "/internal/categories/update", json=category_update_request.model_dump()
+            "/api/internal/categories/update", json=category_update_request.model_dump()
         )
 
         assert response.status_code == 404
@@ -214,16 +220,20 @@ class TestInternalCategoryApi:
         )
         category_id = category_create["id"]
         response = await async_client.delete(
-            f"/internal/categories/delete/{category_id}"
+            f"/api/internal/categories/delete/{category_id}"
         )
 
         assert response.status_code == 204
 
-        response_get = await async_client.get(f"/internal/categories/get/{category_id}")
+        response_get = await async_client.get(
+            f"/api/internal/categories/get/{category_id}"
+        )
         assert response_get.status_code == 404
 
     async def test_delete_category_not_found(self, async_client):
-        response = await async_client.delete(f"/internal/categories/delete/{uuid4()}")
+        response = await async_client.delete(
+            f"/api/internal/categories/delete/{uuid4()}"
+        )
 
         assert response.status_code == 404
         assert "Category with id" in response.json()["detail"]
@@ -248,7 +258,7 @@ class TestInternalCategoryApi:
         )
         partial_update.id = category_create["id"]
         response = await async_client.put(
-            "/internal/categories/update", json=partial_update.model_dump()
+            "/api/internal/categories/update", json=partial_update.model_dump()
         )
         category_update = response.json()
 

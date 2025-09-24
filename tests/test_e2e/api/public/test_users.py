@@ -7,7 +7,7 @@ from expenses_tracker.infrastructure.api.schemas.user import UserResponse
 class TestUserApi:
     async def _register_user(self, async_client, user_create_request):
         register_response = await async_client.post(
-            "/auth/register", json=user_create_request.model_dump()
+            "/api/auth/register", json=user_create_request.model_dump()
         )
         token_response = TokenResponse(**register_response.json())
         return token_response.access_token
@@ -22,7 +22,7 @@ class TestUserApi:
             async_client, unique_user_create_request
         )
         headers = await self._get_auth_headers(access_token)
-        response = await async_client.get("/users/me", headers=headers)
+        response = await async_client.get("/api/users/me", headers=headers)
         user_response = UserResponse(**response.json())
 
         assert response.status_code == status.HTTP_200_OK
@@ -31,13 +31,13 @@ class TestUserApi:
         assert user_response.email_verified is False
 
     async def test_get_current_user_unauthorized(self, async_client):
-        response = await async_client.get("/users/me")
+        response = await async_client.get("/api/users/me")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_get_current_user_invalid_token(self, async_client):
         headers = {"Authorization": "Bearer invalid_token"}
-        response = await async_client.get("/users/me", headers=headers)
+        response = await async_client.get("/api/users/me", headers=headers)
 
         assert response.status_code in [
             status.HTTP_401_UNAUTHORIZED,
@@ -53,7 +53,7 @@ class TestUserApi:
         headers = await self._get_auth_headers(access_token)
         user_update_request.id = str(user_update_request.id)
         response = await async_client.put(
-            "/users/update", json=user_update_request.model_dump(), headers=headers
+            "/api/users/update", json=user_update_request.model_dump(), headers=headers
         )
         user_response = UserResponse(**response.json())
 
@@ -61,7 +61,7 @@ class TestUserApi:
         assert user_response.email == user_update_request.email
         assert user_response.username == unique_user_create_request.username
 
-        get_response = await async_client.get("/users/me", headers=headers)
+        get_response = await async_client.get("/api/users/me", headers=headers)
         updated_user = UserResponse(**get_response.json())
 
         assert updated_user.email == user_update_request.email
@@ -71,7 +71,7 @@ class TestUserApi:
     ):
         user_update_request.id = str(user_update_request.id)
         response = await async_client.put(
-            "/users/update", json=user_update_request.model_dump()
+            "/api/users/update", json=user_update_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -83,16 +83,16 @@ class TestUserApi:
             async_client, unique_user_create_request
         )
         headers = await self._get_auth_headers(access_token)
-        response = await async_client.delete("/users/delete", headers=headers)
+        response = await async_client.delete("/api/users/delete", headers=headers)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        get_response = await async_client.get("/users/me", headers=headers)
+        get_response = await async_client.get("/api/users/me", headers=headers)
 
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
         login_response = await async_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json=LoginRequest(
                 username=unique_user_create_request.username,
                 password=unique_user_create_request.password,
@@ -102,7 +102,7 @@ class TestUserApi:
         assert login_response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_current_user_unauthorized(self, async_client):
-        response = await async_client.delete("/users/delete")
+        response = await async_client.delete("/api/users/delete")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -113,14 +113,14 @@ class TestUserApi:
             async_client, unique_user_create_request
         )
         headers = await self._get_auth_headers(access_token)
-        get_response = await async_client.get("/users/me", headers=headers)
+        get_response = await async_client.get("/api/users/me", headers=headers)
         original_user = UserResponse(**get_response.json())
 
         assert get_response.status_code == status.HTTP_200_OK
 
         user_update_request.id = str(user_update_request.id)
         update_response = await async_client.put(
-            "/users/update", json=user_update_request.model_dump(), headers=headers
+            "/api/users/update", json=user_update_request.model_dump(), headers=headers
         )
         updated_user = UserResponse(**update_response.json())
 
@@ -128,11 +128,13 @@ class TestUserApi:
         assert updated_user.email == user_update_request.email
         assert updated_user.username == original_user.username
 
-        delete_response = await async_client.delete("/users/delete", headers=headers)
+        delete_response = await async_client.delete(
+            "/api/users/delete", headers=headers
+        )
 
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
-        final_get_response = await async_client.get("/users/me", headers=headers)
+        final_get_response = await async_client.get("/api/users/me", headers=headers)
 
         assert final_get_response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -143,7 +145,7 @@ class TestUserApi:
             async_client, unique_user_create_request
         )
         headers = await self._get_auth_headers(access_token)
-        response = await async_client.get("/users/me", headers=headers)
+        response = await async_client.get("/api/users/me", headers=headers)
         user_response = UserResponse(**response.json())
         cache_key = f"user:{user_response.id}"
         cached = await redis_client.get(cache_key)
@@ -151,7 +153,7 @@ class TestUserApi:
         assert cached is not None, "User must be cached in Redis after first get"
 
         await redis_client.delete(cache_key)
-        await async_client.get("/users/me", headers=headers)
+        await async_client.get("/api/users/me", headers=headers)
         cached2 = await redis_client.get(cache_key)
 
         assert cached2 is not None, "User must be cached again after cache miss"
