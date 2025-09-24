@@ -1,9 +1,11 @@
+from limits.storage import storage_from_string
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from expenses_tracker.core.settings import get_settings
+limiter = Limiter(key_func=get_remote_address)
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    storage_uri=f"redis://{get_settings().redis_host}:{get_settings().redis_port}/{get_settings().redis_db}",
-)
+
+def init_rate_limiter(storage_uri: str) -> Limiter:
+    limiter._storage_uri = storage_uri
+    limiter._storage = storage_from_string(storage_uri)
+    return limiter

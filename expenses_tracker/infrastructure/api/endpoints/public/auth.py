@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, Request
 
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
@@ -28,6 +28,7 @@ logger = structlog.get_logger(__name__)
 @router.post("/register")
 @limiter.limit("5/minute")
 async def register_user(
+    request: Request,
     user_data: UserCreateRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> TokenResponse:
@@ -49,6 +50,7 @@ async def register_user(
 @router.post("/login")
 @limiter.limit("10/minute")
 async def login_user(
+    request: Request,
     login_data: LoginRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> TokenResponse:
@@ -93,6 +95,7 @@ async def logout_user(
 @router.post("/request-verify-email")
 @limiter.limit("3/minute")
 async def request_verify_email(
+    request: Request,
     user_id: UUID = Depends(get_current_user_id),
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> Response:
@@ -116,6 +119,7 @@ async def verify_email(
 @router.post("/request-reset-password")
 @limiter.limit("3/minute")
 async def request_reset_password(
+    request: Request,
     password_reset_request_data: PasswordResetRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> Response:

@@ -26,7 +26,7 @@ def postgres_container():
 
 @fixture(scope="session")
 def redis_container():
-    with RedisContainer().with_bind_ports(6379, 6399) as container:
+    with RedisContainer() as container:
         host = container.get_container_host_ip()
         port = container.get_exposed_port(6379)
         yield {"host": host, "port": port, "dsn": f"redis://{host}:{port}/0"}
@@ -76,11 +76,11 @@ def override_settings(postgres_container, redis_container, monkeypatch):
         redis_db=0,
     )
     monkeypatch.setattr(settings_module, "Settings", lambda: test_settings)
-    return test_settings
 
 
 @fixture
 def configured_app(override_settings, async_engine) -> FastAPI:
+    settings_module.get_settings.cache_clear()
     app = init_app()
     return app
 
@@ -109,3 +109,10 @@ async def async_client(initialized_app: ASGIApp) -> AsyncGenerator[AsyncClient, 
         transport=ASGITransport(app=initialized_app), base_url="http://test"
     ) as c:
         yield c
+
+
+@fixture(autouse=True)
+def disable_limiter(monkeypatch):
+    from expenses_tracker.infrastructure.api import rate_limiter
+
+    rate_limiter.limiter.enabled = False

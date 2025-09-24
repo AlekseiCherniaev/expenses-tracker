@@ -218,9 +218,9 @@ class AuthUserUseCases:
             if not user:
                 raise UserNotFound(f"User with email {email} not found")
 
-            if user.email is None:
+            if user.email is None or user.email_verified is False:
                 raise InvalidCredentials(
-                    "User does not have an email to reset password"
+                    "User does not have an verified email to reset password"
                 )
 
             password_reset_token = self._token_service.create_token(
