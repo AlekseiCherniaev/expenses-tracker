@@ -1,7 +1,6 @@
 README.md
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
-**/*.py[cod]
 # Git
 .git
 .gitignore
@@ -16,4 +15,4 @@ Dockerfile
 # Virtual environment
 .env
 .venv/
-venv/
+/frontend_build
