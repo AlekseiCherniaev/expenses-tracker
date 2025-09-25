@@ -12,7 +12,7 @@ from expenses_tracker.infrastructure.api.endpoints.public.category import (
 class TestCategoryApi:
     async def _register_user(self, async_client, user_create_request):
         register_response = await async_client.post(
-            "/auth/register", json=user_create_request.model_dump()
+            "/api/auth/register", json=user_create_request.model_dump()
         )
         token_response = TokenResponse(**register_response.json())
         return token_response.access_token
@@ -26,7 +26,7 @@ class TestCategoryApi:
         headers = await self._get_auth_headers(access_token)
         before_create = datetime.now(timezone.utc)
         response = await async_client.post(
-            "/categories/create",
+            "/api/categories/create",
             json=category_create_request.model_dump(),
             headers=headers,
         )
@@ -51,7 +51,7 @@ class TestCategoryApi:
         )
         category_id = category_create["id"]
         response = await async_client.get(
-            f"/categories/get/{category_id}", headers=headers
+            f"/api/categories/get/{category_id}", headers=headers
         )
         category_get = response.json()
 
@@ -69,7 +69,7 @@ class TestCategoryApi:
         )
 
     async def test_get_category_unauthorized(self, async_client):
-        response = await async_client.get(f"/categories/get/{uuid4()}")
+        response = await async_client.get(f"/api/categories/get/{uuid4()}")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -80,7 +80,9 @@ class TestCategoryApi:
             async_client, unique_user_create_request
         )
         headers = await self._get_auth_headers(access_token)
-        response = await async_client.get(f"/categories/get/{uuid4()}", headers=headers)
+        response = await async_client.get(
+            f"/api/categories/get/{uuid4()}", headers=headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Category with id" in response.json()["detail"]
@@ -99,7 +101,9 @@ class TestCategoryApi:
         ) = await self._create_category_via_api(
             async_client, access_token, unique_category_create_request
         )
-        response = await async_client.get("/categories/get-by-user", headers=headers)
+        response = await async_client.get(
+            "/api/categories/get-by-user", headers=headers
+        )
         categories_get = response.json()
 
         assert response.status_code == status.HTTP_200_OK
@@ -128,7 +132,9 @@ class TestCategoryApi:
         )
         headers = await self._get_auth_headers(access_token)
 
-        response = await async_client.get("/categories/get-by-user", headers=headers)
+        response = await async_client.get(
+            "/api/categories/get-by-user", headers=headers
+        )
         categories_get = response.json()
 
         assert response.status_code == status.HTTP_200_OK
@@ -136,7 +142,7 @@ class TestCategoryApi:
         assert len(categories_get) == 0
 
     async def test_get_categories_by_user_unauthorized(self, async_client):
-        response = await async_client.get("/categories/get-by-user")
+        response = await async_client.get("/api/categories/get-by-user")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -174,7 +180,7 @@ class TestCategoryApi:
         self, async_client, unique_category_create_request
     ):
         response = await async_client.post(
-            "/categories/create", json=unique_category_create_request.model_dump()
+            "/api/categories/create", json=unique_category_create_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -200,7 +206,7 @@ class TestCategoryApi:
         category_update_request.id = category_create["id"]
         before_update = datetime.now(timezone.utc)
         response = await async_client.put(
-            "/categories/update",
+            "/api/categories/update",
             json=category_update_request.model_dump(),
             headers=headers,
         )
@@ -229,7 +235,7 @@ class TestCategoryApi:
     ):
         category_update_request.id = str(uuid4())
         response = await async_client.put(
-            "/categories/update", json=category_update_request.model_dump()
+            "/api/categories/update", json=category_update_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -244,7 +250,7 @@ class TestCategoryApi:
 
         category_update_request.id = str(uuid4())
         response = await async_client.put(
-            "/categories/update",
+            "/api/categories/update",
             json=category_update_request.model_dump(),
             headers=headers,
         )
@@ -264,18 +270,18 @@ class TestCategoryApi:
         )
         category_id = category_create["id"]
         response = await async_client.delete(
-            f"/categories/delete/{category_id}", headers=headers
+            f"/api/categories/delete/{category_id}", headers=headers
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         response_get = await async_client.get(
-            f"/categories/get/{category_id}", headers=headers
+            f"/api/categories/get/{category_id}", headers=headers
         )
         assert response_get.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_category_unauthorized(self, async_client):
-        response = await async_client.delete(f"/categories/delete/{uuid4()}")
+        response = await async_client.delete(f"/api/categories/delete/{uuid4()}")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -288,7 +294,7 @@ class TestCategoryApi:
         headers = await self._get_auth_headers(access_token)
 
         response = await async_client.delete(
-            f"/categories/delete/{uuid4()}", headers=headers
+            f"/api/categories/delete/{uuid4()}", headers=headers
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -309,24 +315,24 @@ class TestCategoryApi:
             async_client, access_token, unique_category_create_request
         )
         get_response = await async_client.get(
-            f"/categories/get/{category_create['id']}", headers=headers
+            f"/api/categories/get/{category_create['id']}", headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK
 
         category_update_request.id = category_create["id"]
         update_response = await async_client.put(
-            "/categories/update",
+            "/api/categories/update",
             json=category_update_request.model_dump(),
             headers=headers,
         )
         assert update_response.status_code == status.HTTP_200_OK
 
         delete_response = await async_client.delete(
-            f"/categories/delete/{category_create['id']}", headers=headers
+            f"/api/categories/delete/{category_create['id']}", headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
         final_get_response = await async_client.get(
-            f"/categories/get/{category_create['id']}", headers=headers
+            f"/api/categories/get/{category_create['id']}", headers=headers
         )
         assert final_get_response.status_code == status.HTTP_404_NOT_FOUND

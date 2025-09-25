@@ -13,14 +13,14 @@ from expenses_tracker.infrastructure.api.schemas.user import (
 class TestAuthApi:
     async def _register_user(self, async_client, user_create_request):
         response = await async_client.post(
-            "/auth/register", json=user_create_request.model_dump()
+            "/api/auth/register", json=user_create_request.model_dump()
         )
         assert response.status_code == status.HTTP_200_OK
         return TokenResponse(**response.json())
 
     async def test_register_success(self, async_client, unique_user_create_request):
         response = await async_client.post(
-            "/auth/register", json=unique_user_create_request.model_dump()
+            "/api/auth/register", json=unique_user_create_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -31,7 +31,7 @@ class TestAuthApi:
         assert token_response.token_type == "bearer"
 
         login_response = await async_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json=LoginRequest(
                 username=unique_user_create_request.username,
                 password=unique_user_create_request.password,
@@ -43,12 +43,12 @@ class TestAuthApi:
         self, async_client, unique_user_create_request
     ):
         response1 = await async_client.post(
-            "/auth/register", json=unique_user_create_request.model_dump()
+            "/api/auth/register", json=unique_user_create_request.model_dump()
         )
         assert response1.status_code == status.HTTP_200_OK
 
         response2 = await async_client.post(
-            "/auth/register", json=unique_user_create_request.model_dump()
+            "/api/auth/register", json=unique_user_create_request.model_dump()
         )
 
         assert response2.status_code == status.HTTP_400_BAD_REQUEST
@@ -66,7 +66,7 @@ class TestAuthApi:
         )
 
         response = await async_client.post(
-            "/auth/register", json=conflict_request.model_dump()
+            "/api/auth/register", json=conflict_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -84,7 +84,7 @@ class TestAuthApi:
         )
 
         response = await async_client.post(
-            "/auth/register", json=conflict_request.model_dump()
+            "/api/auth/register", json=conflict_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -98,7 +98,7 @@ class TestAuthApi:
         )
 
         response = await async_client.post(
-            "/auth/login", json=login_request.model_dump()
+            "/api/auth/login", json=login_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -116,7 +116,7 @@ class TestAuthApi:
         )
 
         response = await async_client.post(
-            "/auth/login", json=login_request.model_dump()
+            "/api/auth/login", json=login_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -132,7 +132,7 @@ class TestAuthApi:
         )
 
         response = await async_client.post(
-            "/auth/login", json=invalid_login.model_dump()
+            "/api/auth/login", json=invalid_login.model_dump()
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -147,7 +147,7 @@ class TestAuthApi:
         )
         refresh_request = RefreshRequest(refresh_token=register_tokens.refresh_token)
         response = await async_client.post(
-            "/auth/refresh", json=refresh_request.model_dump()
+            "/api/auth/refresh", json=refresh_request.model_dump()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -166,7 +166,7 @@ class TestAuthApi:
         refresh_request = RefreshRequest(refresh_token="invalid_token_format")
 
         response = await async_client.post(
-            "/auth/refresh", json=refresh_request.model_dump()
+            "/api/auth/refresh", json=refresh_request.model_dump()
         )
 
         assert response.status_code in [
@@ -178,7 +178,7 @@ class TestAuthApi:
         refresh_request = RefreshRequest(refresh_token="clearly_invalid_token_string")
 
         response = await async_client.post(
-            "/auth/refresh", json=refresh_request.model_dump()
+            "/api/auth/refresh", json=refresh_request.model_dump()
         )
 
         assert response.status_code in [
@@ -192,14 +192,14 @@ class TestAuthApi:
 
     async def test_full_auth_flow(self, async_client, unique_user_create_request):
         register_response = await async_client.post(
-            "/auth/register", json=unique_user_create_request.model_dump()
+            "/api/auth/register", json=unique_user_create_request.model_dump()
         )
 
         assert register_response.status_code == status.HTTP_200_OK
 
         register_tokens = TokenResponse(**register_response.json())
         login_response = await async_client.post(
-            "/auth/login",
+            "/api/auth/login",
             json=LoginRequest(
                 username=unique_user_create_request.username,
                 password=unique_user_create_request.password,
@@ -210,7 +210,7 @@ class TestAuthApi:
 
         login_tokens = TokenResponse(**login_response.json())
         refresh_response = await async_client.post(
-            "/auth/refresh",
+            "/api/auth/refresh",
             json=RefreshRequest(refresh_token=login_tokens.refresh_token).model_dump(),
         )
 
