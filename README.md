@@ -7,11 +7,11 @@
 1. Configure `.env` with domain and email
 2. Obtain certificates (first time only):
    ```bash
-   docker-compose run --rm -p 80:80 certbot
+   docker compose --env-file .env run  --rm -p 80:80 certbot
    ```
 3. Start services:
     ```bash
-    docker-compose up -d --build api postgres redis migrations nginx certbot-renew
+    docker compose up -d --build api postgres redis migrations nginx certbot-renew
     ```
 
 ## Notes
