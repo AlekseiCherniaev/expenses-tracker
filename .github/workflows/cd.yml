@@ -44,6 +44,6 @@ jobs:
           script: |
             cd ~/expenses_tracker
             git pull origin master
-            docker-compose pull
-            docker-compose up -d api
-            docker-compose exec -T api alembic upgrade head
+            docker compose pull
+            docker compose up -d api
+            docker compose exec -T api alembic upgrade head
