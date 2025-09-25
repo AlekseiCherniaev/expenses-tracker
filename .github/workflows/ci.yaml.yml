@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ dev, master ]
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          activate-environment: true
+      - run: |
+          uv pip install pip
+          uv pip install -e .
+          uv pip install pytest
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      - name: Run tests
+        run: pytest --maxfail=1 --disable-warnings -q
