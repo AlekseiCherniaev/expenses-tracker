@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 3
     refresh_token_expire_days: int = 30
     email_verification_token_expire_hours: int = 1
+    password_reset_token_expire_hours: int = 1
     clock_skew_seconds: int = 180
 
     domain: str = "localhost:8000"

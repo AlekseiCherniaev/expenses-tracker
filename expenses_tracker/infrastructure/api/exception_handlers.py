@@ -1,5 +1,6 @@
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 from starlette import status
 
 from expenses_tracker.domain.exceptions.auth import (
@@ -30,6 +31,7 @@ EXCEPTION_STATUS_MAP: dict[type[Exception], int] = {
     Unauthorized: status.HTTP_401_UNAUTHORIZED,
     TokenExpired: status.HTTP_401_UNAUTHORIZED,
     InvalidToken: status.HTTP_401_UNAUTHORIZED,
+    RateLimitExceeded: status.HTTP_429_TOO_MANY_REQUESTS,
 }
 
 
