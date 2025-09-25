@@ -37,8 +37,8 @@ def get_app_config(settings: Settings) -> dict[Any, Any]:
         docs_url=None,
         redoc_url=None,
         debug=settings.fast_api_debug,
-        openapi_url="/internal/openapi.json",
-        swagger_ui_oauth2_redirect_url="/internal/docs/oauth2-redirect",
+        openapi_url="/api/internal/openapi.json",
+        swagger_ui_oauth2_redirect_url="/api/internal/docs/oauth2-redirect",
         generate_unique_id_function=use_handler_name_as_unique_id,
         lifespan=lifespan,
     )
@@ -66,7 +66,7 @@ def init_app() -> FastAPI:
     logger.info("Initializing app")
     app = FastAPI(**get_app_config(settings))
     app.mount(
-        "/internal/static",
+        "/api/internal/static",
         StaticFiles(directory=f"{settings.static_url_path}"),
         name="static",
     )

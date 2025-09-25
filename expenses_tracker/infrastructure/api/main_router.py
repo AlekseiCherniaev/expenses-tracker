@@ -37,7 +37,7 @@ from expenses_tracker.infrastructure.api.endpoints.public.user import (
 
 
 def create_public_router() -> APIRouter:
-    router = APIRouter()
+    router = APIRouter(prefix="/api")
     router.include_router(auth_user_router)
     router.include_router(user_router)
     router.include_router(category_router)
@@ -48,7 +48,7 @@ def create_public_router() -> APIRouter:
 
 
 def create_internal_router() -> APIRouter:
-    router = APIRouter(prefix="/internal")
+    router = APIRouter(prefix="/api/internal")
     router.include_router(internal_user_router)
     router.include_router(internal_category_router)
     router.include_router(internal_expense_router)

@@ -4,13 +4,13 @@ from uuid import UUID, uuid4
 
 class TestInternalUserApi:
     async def test_health(self, async_client):
-        response = await async_client.get("/health")
+        response = await async_client.get("/api/health")
 
         assert response.status_code == 200
         assert response.json() == {"status": "OK"}
 
     async def test_docs(self, async_client):
-        response = await async_client.get("/internal/docs")
+        response = await async_client.get("/api/internal/docs")
 
         assert response.status_code == 200
 
@@ -19,7 +19,7 @@ class TestInternalUserApi:
     ) -> (dict, datetime, datetime):
         before_create = datetime.now(timezone.utc)
         response = await async_client.post(
-            "/internal/users/create", json=user_create_request.model_dump()
+            "/api/internal/users/create", json=user_create_request.model_dump()
         )
         after_create = datetime.now(timezone.utc)
 
@@ -50,7 +50,7 @@ class TestInternalUserApi:
             update={"username": "other_username"}
         )
         response = await async_client.post(
-            "/internal/users/create", json=request_conflict_email.model_dump()
+            "/api/internal/users/create", json=request_conflict_email.model_dump()
         )
 
         assert response.status_code == 400
@@ -60,7 +60,7 @@ class TestInternalUserApi:
             update={"email": "other@test.com"}
         )
         response = await async_client.post(
-            "/internal/users/create", json=request_conflict_username.model_dump()
+            "/api/internal/users/create", json=request_conflict_username.model_dump()
         )
 
         assert response.status_code == 400
@@ -71,7 +71,7 @@ class TestInternalUserApi:
             async_client, unique_user_create_request
         )
         user_created_id = user_create["id"]
-        response = await async_client.get(f"/internal/users/get/{user_created_id}")
+        response = await async_client.get(f"/api/internal/users/get/{user_created_id}")
         user_get = response.json()
 
         assert response.status_code == 200
@@ -87,7 +87,7 @@ class TestInternalUserApi:
         )
 
     async def test_get_user_not_found(self, async_client):
-        response = await async_client.get(f"/internal/users/get/{uuid4()}")
+        response = await async_client.get(f"/api/internal/users/get/{uuid4()}")
 
         assert response.status_code == 404
         assert response.json()["detail"].startswith("User with id")
@@ -98,7 +98,7 @@ class TestInternalUserApi:
         user_create, before_create, after_create = await self._create_user(
             async_client, unique_user_create_request
         )
-        response = await async_client.get("/internal/users/get-all")
+        response = await async_client.get("/api/internal/users/get-all")
         users_get = response.json()
 
         assert response.status_code == 200
@@ -130,7 +130,7 @@ class TestInternalUserApi:
         user_update_request.id = user_create["id"]
         before_update = datetime.now(timezone.utc)
         response = await async_client.put(
-            "/internal/users/update", json=user_update_request.model_dump()
+            "/api/internal/users/update", json=user_update_request.model_dump()
         )
         after_update = datetime.now(timezone.utc)
         user_update = response.json()
@@ -156,7 +156,7 @@ class TestInternalUserApi:
         )
         user_created_id = user_create["id"]
         response = await async_client.delete(
-            f"/internal/users/delete/{user_created_id}"
+            f"/api/internal/users/delete/{user_created_id}"
         )
 
         assert response.status_code == 204
