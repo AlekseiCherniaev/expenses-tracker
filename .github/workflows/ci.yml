@@ -5,6 +5,8 @@ on:
     branches: [ dev, master ]
   workflow_dispatch:
 
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+
 jobs:
   lint_and_test:
     runs-on: ubuntu-latest
