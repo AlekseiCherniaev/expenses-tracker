@@ -24,10 +24,17 @@ jobs:
         with:
           version: "latest"
           activate-environment: true
-      - run: |
-          uv pip install pip
-          uv pip install -e .
-          uv pip install pytest
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --frozen
 
       - name: Run pre-commit
         run: pre-commit run --all-files
