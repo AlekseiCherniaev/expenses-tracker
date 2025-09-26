@@ -36,6 +36,7 @@ def user_dto(user_entity):
         created_at=user_entity.created_at,
         updated_at=user_entity.updated_at,
         last_refresh_jti=user_entity.last_refresh_jti,
+        avatar_url=user_entity.avatar_url,
     )
 
 
