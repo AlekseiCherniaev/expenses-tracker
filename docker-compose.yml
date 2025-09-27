@@ -140,7 +140,8 @@ services:
       "--agree-tos",
       "--no-eff-email",
       "-d", "${DOMAIN}",
-      "-d", "www.${DOMAIN}"
+      "-d", "www.${DOMAIN}",
+      "-d", "storage.${DOMAIN}"
     ]
 
   certbot-renew:
