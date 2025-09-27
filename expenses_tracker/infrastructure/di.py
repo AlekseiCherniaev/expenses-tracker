@@ -7,6 +7,7 @@ from expenses_tracker.application.dto.budget import BudgetDTO
 from expenses_tracker.application.dto.category import CategoryDTO
 from expenses_tracker.application.dto.expense import ExpenseDTO
 from expenses_tracker.application.dto.user import UserDTO
+from expenses_tracker.application.interfaces.avatar_storage import IAvatarStorage
 from expenses_tracker.application.interfaces.cache_service import ICacheService
 from expenses_tracker.application.interfaces.email_service import IEmailService
 from expenses_tracker.application.interfaces.password_hasher import IPasswordHasher
@@ -15,6 +16,9 @@ from expenses_tracker.application.use_cases.auth import AuthUserUseCases
 from expenses_tracker.application.use_cases.budget import BudgetUseCases
 from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
+from expenses_tracker.application.use_cases.upload_avatar_use_cases import (
+    UserAvatarUseCase,
+)
 from expenses_tracker.application.use_cases.user import UserUseCases
 from expenses_tracker.domain.entities.token_payload import TokenPayload
 from expenses_tracker.domain.repositories.uow import IUnitOfWork
@@ -42,6 +46,10 @@ def get_email_service(request: Request) -> IEmailService:
     return request.app.state.email_service  # type: ignore
 
 
+def get_avatar_storage(request: Request) -> IAvatarStorage:
+    return request.app.state.avatar_storage  # type: ignore
+
+
 async def get_sqlalchemy_uow(request: Request) -> SqlAlchemyUnitOfWork:
     async_engine = request.app.state.sqlalchemy_engine
     session_factory = async_sessionmaker(
@@ -65,6 +73,18 @@ async def get_user_use_cases(
     return UserUseCases(
         unit_of_work=uow,
         password_hasher=password_hasher,
+        cache_service=cache_service,
+    )
+
+
+async def get_upload_avatar_use_cases(
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
+    avatar_storage: IAvatarStorage = Depends(get_avatar_storage),
+    cache_service: ICacheService[UserDTO] = Depends(get_redis_service),
+) -> UserAvatarUseCase:
+    return UserAvatarUseCase(
+        unit_of_work=uow,
+        avatar_storage=avatar_storage,
         cache_service=cache_service,
     )
 
