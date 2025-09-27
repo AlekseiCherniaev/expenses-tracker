@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     username: str
     email: str | None = None
     email_verified: bool
+    avatar_url: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -24,11 +25,17 @@ class UserCreateRequest(BaseModel):
     password: str
 
 
+class UserAvatarUploadResponse(BaseModel):
+    upload_url: str
+    public_url: str
+
+
 class InternalUserResponse(BaseModel):
     id: UUID
     username: str
     email: str | None = None
     email_verified: bool
+    avatar_url: str | None
     created_at: datetime
     updated_at: datetime
 

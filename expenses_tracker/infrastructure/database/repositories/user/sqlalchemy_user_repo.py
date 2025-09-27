@@ -57,6 +57,16 @@ class SQLAlchemyUserRepository(IUserRepository):
             )
         )
 
+    async def update_avatar_url(self, user_id: UUID, avatar_url: str | None) -> None:
+        await self._session.execute(
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(
+                avatar_url=avatar_url,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+
     async def get_for_update(self, user_id: UUID) -> User | None:
         result = await self._session.execute(
             select(UserModel).where(UserModel.id == user_id).with_for_update()

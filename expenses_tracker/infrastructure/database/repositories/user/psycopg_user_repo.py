@@ -39,8 +39,9 @@ class PsycopgUserRepository(IUserRepository):
         async with self._conn.cursor(row_factory=dict_row) as cursor:
             await cursor.execute(
                 """
-                INSERT INTO users (id, email, username, hashed_password, email_verified, last_refresh_jti, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO users (id, email, username, hashed_password, email_verified, last_refresh_jti, avatar_url,
+                                   created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     str(user.id),
@@ -49,6 +50,7 @@ class PsycopgUserRepository(IUserRepository):
                     user.hashed_password,
                     user.email_verified,
                     user.last_refresh_jti,
+                    user.avatar_url,
                     user.created_at,
                     user.updated_at,
                 ),
@@ -63,9 +65,10 @@ class PsycopgUserRepository(IUserRepository):
                 SET username        = %s,
                     email           = %s,
                     hashed_password = %s,
-                    email_verified       = %s,
+                    email_verified  = %s,
                     updated_at      = %s,
-                    last_refresh_jti= %s
+                    last_refresh_jti= %s,
+                    avatar_url= %s
                 WHERE id = %s
                 """,
                 (
@@ -75,6 +78,7 @@ class PsycopgUserRepository(IUserRepository):
                     user.email_verified,
                     user.updated_at,
                     user.last_refresh_jti,
+                    user.avatar_url,
                     str(user.id),
                 ),
             )
@@ -90,6 +94,18 @@ class PsycopgUserRepository(IUserRepository):
                 WHERE id = %s
                 """,
                 (jti, str(user_id)),
+            )
+
+    async def update_avatar_url(self, user_id: UUID, avatar_url: str | None) -> None:
+        async with self._conn.cursor() as cursor:
+            await cursor.execute(
+                """
+                UPDATE users
+                SET avatar_url = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                """,
+                (avatar_url, str(user_id)),
             )
 
     async def get_for_update(self, user_id: UUID) -> User | None:

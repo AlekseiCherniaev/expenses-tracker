@@ -17,6 +17,7 @@ class RedisService(Generic[T], ICacheService[T]):
         self._redis = redis.Redis.from_url(
             url=url or get_settings().redis_dsn, encoding="utf-8", decode_responses=True
         )
+        logger.info("RedisService initialized")
 
     def _serialize(self, value: T) -> bytes:
         """Serialize an object (DTO, dataclass, dict, list) to JSON bytes."""

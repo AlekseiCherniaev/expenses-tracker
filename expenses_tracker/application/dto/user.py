@@ -10,6 +10,7 @@ class UserDTO:
     email: str | None
     email_verified: bool
     last_refresh_jti: str | None
+    avatar_url: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -27,3 +28,4 @@ class UserUpdateDTO:
     email: str | None = None
     password: str | None = None
     email_verified: bool | None = None
+    avatar_url: bool | None = None

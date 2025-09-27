@@ -8,6 +8,7 @@ from httpx import AsyncClient, ASGITransport
 from pytest_asyncio import fixture
 from sqlalchemy.ext.asyncio import create_async_engine
 from starlette.datastructures import State
+from testcontainers.minio import MinioContainer
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
@@ -30,6 +31,19 @@ def redis_container():
         host = container.get_container_host_ip()
         port = container.get_exposed_port(6379)
         yield {"host": host, "port": port, "dsn": f"redis://{host}:{port}/0"}
+
+
+@fixture(scope="session")
+def minio_container():
+    with MinioContainer("minio/minio:latest") as container:
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(9000)
+        endpoint = f"http://{host}:{port}"
+        yield {
+            "endpoint": endpoint,
+            "access_key": container.access_key,
+            "secret_key": container.secret_key,
+        }
 
 
 @fixture(scope="function")
@@ -63,7 +77,9 @@ async def async_engine(postgres_container_async_url):
 
 
 @fixture
-def override_settings(postgres_container, redis_container, monkeypatch):
+def override_settings(
+    postgres_container, redis_container, monkeypatch, minio_container
+):
     test_settings = Settings(
         environment=Environment.TEST,
         postgres_host=postgres_container.get_container_host_ip(),
@@ -74,6 +90,9 @@ def override_settings(postgres_container, redis_container, monkeypatch):
         redis_host=redis_container["host"],
         redis_port=redis_container["port"],
         redis_db=0,
+        minio_endpoint=minio_container["endpoint"],
+        minio_access_key=minio_container["access_key"],
+        minio_secret_key=minio_container["secret_key"],
     )
     monkeypatch.setattr(settings_module, "Settings", lambda: test_settings)
 

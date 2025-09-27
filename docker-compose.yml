@@ -45,6 +45,34 @@ services:
     networks:
       - common_network
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file:
+      - .env
+    volumes:
+      - minio-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - common_network
+
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -133,6 +161,7 @@ networks:
     driver: bridge
 
 volumes:
+  minio-data:
   postgres:
     driver: local
     name: expenses_postgres_data

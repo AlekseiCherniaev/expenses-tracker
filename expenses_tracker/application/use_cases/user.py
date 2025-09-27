@@ -34,6 +34,7 @@ class UserUseCases:
             created_at=user.created_at,
             updated_at=user.updated_at,
             last_refresh_jti=user.last_refresh_jti,
+            avatar_url=user.avatar_url,
             id=user.id,
         )
 
