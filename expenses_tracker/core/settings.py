@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     category_dto_ttl_seconds: int = 60 * 30
     categories_list_ttl_seconds: int = 60 * 30
 
+    minio_endpoint: str = "http://localhost:9000"
+    minio_access_key: str = "minio"
+    minio_secret_key: str = "minio123"
+    minio_avatar_bucket: str = "avatars"
+
     @computed_field  # type: ignore
     @property
     def redis_dsn(self) -> str:
