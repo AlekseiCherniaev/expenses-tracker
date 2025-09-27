@@ -25,6 +25,11 @@ class UserCreateRequest(BaseModel):
     password: str
 
 
+class UserAvatarUploadResponse(BaseModel):
+    upload_url: str
+    public_url: str
+
+
 class InternalUserResponse(BaseModel):
     id: UUID
     username: str
