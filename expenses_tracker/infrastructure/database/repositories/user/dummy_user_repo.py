@@ -34,6 +34,12 @@ class DummyUserRepository(IUserRepository):
             user.last_refresh_jti = jti
             self.users[user_id] = user
 
+    async def update_avatar_url(self, user_id: UUID, avatar_url: str | None) -> None:
+        user = self.users.get(user_id)
+        if user:
+            user.avatar_url = avatar_url
+            self.users[user_id] = user
+
     async def get_for_update(self, user_id: UUID) -> User | None:
         return self.users.get(user_id)
 

@@ -173,6 +173,7 @@ def unique_user_dto(unique_user_entity):
         created_at=unique_user_entity.created_at,
         updated_at=unique_user_entity.updated_at,
         last_refresh_jti=unique_user_entity.last_refresh_jti,
+        avatar_url=unique_user_entity.avatar_url,
     )
 
 

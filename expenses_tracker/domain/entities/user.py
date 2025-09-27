@@ -11,6 +11,7 @@ class User:
     email: str | None = None
     email_verified: bool = False
     last_refresh_jti: str | None = None
+    avatar_url: str | None = None
     created_at: datetime = field(default_factory=partial(datetime.now, timezone.utc))
     updated_at: datetime = field(default_factory=partial(datetime.now, timezone.utc))
     id: UUID = field(default_factory=uuid4)

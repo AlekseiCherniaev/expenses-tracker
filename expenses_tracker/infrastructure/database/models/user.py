@@ -29,6 +29,7 @@ class UserModel(Base):
     last_refresh_jti: Mapped[str | None] = mapped_column(
         String, nullable=True, default=None
     )
+    avatar_url: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
 
     categories: Mapped[list["CategoryModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True
@@ -48,6 +49,7 @@ class UserModel(Base):
             hashed_password=self.hashed_password,
             email_verified=self.email_verified,
             last_refresh_jti=self.last_refresh_jti,
+            avatar_url=self.avatar_url,
             created_at=self.created_at,
             updated_at=self.updated_at,
         )
@@ -61,6 +63,7 @@ class UserModel(Base):
             hashed_password=user.hashed_password,
             email_verified=user.email_verified,
             last_refresh_jti=user.last_refresh_jti,
+            avatar_url=user.avatar_url,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )

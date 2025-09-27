@@ -23,10 +23,11 @@ class FastapiEmailService(IEmailService):
             VALIDATE_CERTS=True,
         )
         self.fastmail = FastMail(self.conf)
+        logger.info("FastapiEmailService initialized")
 
     async def send_verification_email(self, to: EmailStr, token: str) -> None:
         verification_link = (
-            f"https://{get_settings().domain}/auth/verify-email?email_token={token}"
+            f"https://{get_settings().domain}/api/auth/verify-email?email_token={token}"
         )
 
         message = MessageSchema(
