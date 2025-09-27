@@ -42,6 +42,10 @@ class AuthUserUseCases:
     def _refresh_token_cache_key(jti: str) -> str:
         return f"blacklist:refresh:{jti}"
 
+    @staticmethod
+    def _user_cache_key(user_id: UUID) -> str:
+        return f"user:{user_id}"
+
     def _create_tokens_for_user(self, user: User, refresh_jti: str) -> TokenPairDTO:
         access_token = self._token_service.create_token(
             subject=str(user.id),
@@ -209,6 +213,7 @@ class AuthUserUseCases:
 
             user.email_verified = True
             await uow.user_repository.update(user=user)
+            await self._cache_service.delete(key=self._user_cache_key(user_id))
             logger.bind(user_id=user.id).debug("Verified user email")
         return None
 
