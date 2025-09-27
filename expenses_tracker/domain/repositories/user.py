@@ -34,6 +34,10 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
+    async def update_avatar_url(self, user_id: UUID, avatar_url: str | None) -> None:
+        pass
+
+    @abstractmethod
     async def get_for_update(self, user_id: UUID) -> User | None:
         """row-level lock (SELECT FOR UPDATE)"""
         pass
