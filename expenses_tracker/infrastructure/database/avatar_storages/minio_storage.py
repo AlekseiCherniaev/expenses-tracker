@@ -21,6 +21,8 @@ class MinioAvatarStorage(IAvatarStorage):
             region_name="us-east-1",
         )
         self._bucket_name = get_settings().minio_avatar_bucket
+        self._public_endpoint = get_settings().minio_public_endpoint
+
         self.ensure_bucket()
         logger.info("MinIO client initialized")
 
@@ -28,13 +30,13 @@ class MinioAvatarStorage(IAvatarStorage):
         try:
             self._client.head_bucket(Bucket=self._bucket_name)
             logger.bind(bucket=self._bucket_name).info("Bucket exists")
+            self._set_bucket_policy()
         except ClientError as e:
             if e.response["Error"]["Code"] in ("404", "NoSuchBucket"):
                 try:
                     self._client.create_bucket(Bucket=self._bucket_name)
                     logger.bind(bucket=self._bucket_name).info("Bucket created")
                     self._set_bucket_policy()
-
                 except ClientError:
                     logger.bind(e=e).error("Failed to create bucket")
                     raise
@@ -63,14 +65,25 @@ class MinioAvatarStorage(IAvatarStorage):
             logger.bind(e=e).warning("Could not set bucket policy")
 
     def get_public_url(self, object_name: str) -> str:
-        return f"{get_settings().minio_endpoint}/{self._bucket_name}/{object_name}"
+        return f"{self._public_endpoint}/{self._bucket_name}/{object_name}"
 
     def generate_upload_url(self, object_name: str, expires_in: int = 3600) -> str:
-        return self._client.generate_presigned_url(
+        upload_url = self._client.generate_presigned_url(
             "put_object",
-            Params={"Bucket": self._bucket_name, "Key": object_name},
+            Params={
+                "Bucket": self._bucket_name,
+                "Key": object_name,
+                "ContentType": self._get_content_type(object_name),
+            },
             ExpiresIn=expires_in,
         )
+
+        if get_settings().minio_endpoint in upload_url:
+            upload_url = upload_url.replace(
+                get_settings().minio_endpoint, self._public_endpoint
+            )
+
+        return upload_url
 
     def object_exists(self, object_name: str) -> bool:
         try:
@@ -99,6 +112,17 @@ class MinioAvatarStorage(IAvatarStorage):
                 "Failed to delete object from MinIO"
             )
             return False
+
+    def _get_content_type(self, object_name: str) -> str:
+        extension = object_name.lower().split(".")[-1]
+        content_types = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "gif": "image/gif",
+            "webp": "image/webp",
+        }
+        return content_types.get(extension, "application/octet-stream")
 
     def close(self) -> None:
         self._client.close()

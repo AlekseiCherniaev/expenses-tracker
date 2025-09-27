@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     categories_list_ttl_seconds: int = 60 * 30
 
     minio_endpoint: str = "http://localhost:9000"
+    minio_public_endpoint: str = "https://storage.example.com"
     minio_access_key: str = "minio"
     minio_secret_key: str = "minio123"
     minio_avatar_bucket: str = "avatars"
