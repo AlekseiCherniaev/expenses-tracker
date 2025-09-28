@@ -141,17 +141,21 @@ services:
       "--no-eff-email",
       "-d", "${DOMAIN}",
       "-d", "www.${DOMAIN}",
-      "-d", "storage.${DOMAIN}"
+      "-d", "storage.${DOMAIN}",
+      "--expand"
     ]
 
   certbot-renew:
-    image: certbot/certbot
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot-renew
     container_name: certbot_renew
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-www:/var/www/certbot
-    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx_container nginx -s reload; sleep 12h; done"
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx nginx -s reload; sleep 12h; done"
     restart: unless-stopped
     networks:
       - common_network
