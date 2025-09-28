@@ -1,17 +1,27 @@
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Response, status, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    Response,
+    status,
+    Request,
+    Cookie,
+    HTTPException,
+    Header,
+)
+from starlette.responses import JSONResponse
 
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.use_cases.auth import AuthUserUseCases
-from expenses_tracker.infrastructure.api.dependencies.auth import get_current_user_id
+from expenses_tracker.infrastructure.api.dependencies.auth import (
+    get_current_user_id,
+    auth_response,
+)
 from expenses_tracker.infrastructure.api.rate_limiter import limiter
 from expenses_tracker.infrastructure.api.schemas.auth import (
-    TokenResponse,
     LoginRequest,
-    RefreshRequest,
-    LogoutRequest,
     PasswordResetRequest,
     NewPasswordRequest,
 )
@@ -31,7 +41,7 @@ async def register_user(
     request: Request,
     user_data: UserCreateRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
-) -> TokenResponse:
+) -> JSONResponse:
     logger.bind(user_username=user_data.username).debug("Registering user")
     create_user_dto = UserCreateDTO(
         username=user_data.username,
@@ -40,11 +50,7 @@ async def register_user(
     )
     token_pair = await auth_use_cases.register(user_data=create_user_dto)
     logger.bind(user_username=user_data.username).debug("Registered user")
-    return TokenResponse(
-        refresh_token=token_pair.refresh_token,
-        access_token=token_pair.access_token,
-        token_type=token_pair.token_type,
-    )
+    return auth_response(token_pair.access_token, token_pair.refresh_token)
 
 
 @router.post("/login")
@@ -53,43 +59,63 @@ async def login_user(
     request: Request,
     login_data: LoginRequest,
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
-) -> TokenResponse:
+) -> JSONResponse:
     logger.bind(username=login_data.username).debug("Logging in user")
     token_pair = await auth_use_cases.login(
         username=login_data.username, password=login_data.password
     )
     logger.bind(username=login_data.username).debug("Logged in user")
-    return TokenResponse(
-        refresh_token=token_pair.refresh_token,
-        access_token=token_pair.access_token,
-        token_type=token_pair.token_type,
-    )
+    return auth_response(token_pair.access_token, token_pair.refresh_token)
 
 
 @router.post("/refresh")
-async def refresh_token(
-    refresh_data: RefreshRequest,
+@limiter.limit("5/minute")
+async def refresh_user_token(
+    request: Request,
+    refresh_token: str | None = Cookie(default=None),
+    csrf_token_header: str | None = Header(default=None, alias="X-CSRF-Token"),
+    csrf_token_cookie: str | None = Cookie(default=None, alias="csrf_token"),
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
-) -> TokenResponse:
-    logger.bind(refresh_data=refresh_data).debug("Refreshing token")
-    token_pair = await auth_use_cases.refresh(refresh_token=refresh_data.refresh_token)
-    logger.bind(refresh_data=refresh_data).debug("Refreshed token")
-    return TokenResponse(
-        refresh_token=token_pair.refresh_token,
-        access_token=token_pair.access_token,
-        token_type=token_pair.token_type,
-    )
+) -> JSONResponse:
+    logger.bind(refresh_data=refresh_token).debug("Refreshing token")
+
+    if not csrf_token_header or not csrf_token_cookie:
+        raise HTTPException(status_code=403, detail="Missing CSRF tokens")
+    if csrf_token_header != csrf_token_cookie:
+        raise HTTPException(status_code=403, detail="CSRF validation failed")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh token")
+
+    token_pair = await auth_use_cases.refresh(refresh_token=refresh_token)
+    logger.bind(refresh_data=refresh_token).debug("Refreshed token")
+    return auth_response(token_pair.access_token, token_pair.refresh_token)
 
 
 @router.post("/logout")
+@limiter.limit("5/minute")
 async def logout_user(
-    logout_data: LogoutRequest,
+    request: Request,
+    refresh_token: str | None = Cookie(default=None),
+    csrf_token_header: str | None = Header(default=None, alias="X-CSRF-Token"),
+    csrf_token_cookie: str | None = Cookie(default=None, alias="csrf_token"),
     auth_use_cases: AuthUserUseCases = Depends(get_auth_user_use_cases),
 ) -> Response:
-    logger.bind(logout_data=logout_data).debug("Logging out user")
-    await auth_use_cases.logout(refresh_token=logout_data.refresh_token)
-    logger.bind(logout_data=logout_data).debug("Logged out user")
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    logger.bind(logout_data=refresh_token).debug("Logging out user")
+
+    if not csrf_token_header or not csrf_token_cookie:
+        raise HTTPException(status_code=403, detail="Missing CSRF tokens")
+    if csrf_token_header != csrf_token_cookie:
+        raise HTTPException(status_code=403, detail="CSRF validation failed")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh token")
+
+    await auth_use_cases.logout(refresh_token=refresh_token)
+    logger.bind(logout_data=refresh_token).debug("Logged out user")
+
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    response.delete_cookie("refresh_token", path="/api/auth")
+    response.delete_cookie("csrf_token", path="/api/auth")
+    return response
 
 
 @router.post("/request-verify-email")

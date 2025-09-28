@@ -1,8 +1,6 @@
 from pytest_asyncio import fixture
 
 from expenses_tracker.infrastructure.api.schemas.auth import (
-    RefreshRequest,
-    TokenResponse,
     LoginRequest,
 )
 from expenses_tracker.infrastructure.api.schemas.category import (
@@ -40,20 +38,6 @@ def login_request(unique_user_create_request):
     return LoginRequest(
         username=unique_user_create_request.username,
         password=unique_user_create_request.password,
-    )
-
-
-@fixture
-def refresh_request(random_uuid):
-    return RefreshRequest(refresh_token="test_refresh_token")
-
-
-@fixture
-def token_response():
-    return TokenResponse(
-        access_token="test_access_token",
-        refresh_token="test_refresh_token",
-        token_type="bearer",
     )
 
 
