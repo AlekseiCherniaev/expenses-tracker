@@ -90,9 +90,9 @@ def override_settings(
         redis_host=redis_container["host"],
         redis_port=redis_container["port"],
         redis_db=0,
-        minio_endpoint=minio_container["endpoint"],
-        minio_access_key=minio_container["access_key"],
-        minio_secret_key=minio_container["secret_key"],
+        minio_public_endpoint=minio_container["endpoint"],
+        minio_root_user=minio_container["access_key"],
+        minio_root_password=minio_container["secret_key"],
     )
     monkeypatch.setattr(settings_module, "Settings", lambda: test_settings)
 

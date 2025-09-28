@@ -14,14 +14,13 @@ class MinioAvatarStorage(IAvatarStorage):
     def __init__(self) -> None:
         self._client = client(
             "s3",
-            endpoint_url=get_settings().minio_endpoint,
-            aws_access_key_id=get_settings().minio_access_key,
-            aws_secret_access_key=get_settings().minio_secret_key,
+            endpoint_url=get_settings().minio_public_endpoint,
+            aws_access_key_id=get_settings().minio_root_user,
+            aws_secret_access_key=get_settings().minio_root_password,
             config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
             region_name="us-east-1",
         )
         self._bucket_name = get_settings().minio_avatar_bucket
-        self._public_endpoint = get_settings().minio_public_endpoint
 
         self.ensure_bucket()
         logger.info("MinIO client initialized")
@@ -65,10 +64,12 @@ class MinioAvatarStorage(IAvatarStorage):
             logger.bind(e=e).warning("Could not set bucket policy")
 
     def get_public_url(self, object_name: str) -> str:
-        return f"{self._public_endpoint}/{self._bucket_name}/{object_name}"
+        return (
+            f"{get_settings().minio_public_endpoint}/{self._bucket_name}/{object_name}"
+        )
 
     def generate_upload_url(self, object_name: str, expires_in: int = 3600) -> str:
-        upload_url = self._client.generate_presigned_url(
+        return self._client.generate_presigned_url(
             "put_object",
             Params={
                 "Bucket": self._bucket_name,
@@ -77,13 +78,6 @@ class MinioAvatarStorage(IAvatarStorage):
             },
             ExpiresIn=expires_in,
         )
-
-        if get_settings().minio_endpoint in upload_url:
-            upload_url = upload_url.replace(
-                get_settings().minio_endpoint, self._public_endpoint
-            )
-
-        return upload_url
 
     def object_exists(self, object_name: str) -> bool:
         try:
