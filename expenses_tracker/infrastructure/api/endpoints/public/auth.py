@@ -69,7 +69,7 @@ async def login_user(
 
 
 @router.post("/refresh")
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 async def refresh_user_token(
     request: Request,
     refresh_token: str | None = Cookie(default=None),
