@@ -1,10 +1,12 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from starlette.responses import Response, JSONResponse
 
 from expenses_tracker.application.interfaces.token_service import ITokenService
-from expenses_tracker.core.constants import TokenType
+from expenses_tracker.core.constants import TokenType, Environment
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.domain.exceptions.auth import InvalidCredentials
 from expenses_tracker.infrastructure.di import get_token_service
 
@@ -19,3 +21,46 @@ async def get_current_user_id(
     if payload.type != TokenType.ACCESS:
         raise InvalidCredentials("Provided token is not an access token")
     return UUID(payload.sub)
+
+
+def set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    is_production = get_settings().environment == Environment.PROD
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        path="/api/auth",
+        max_age=60 * 60 * 24 * get_settings().refresh_token_expire_days,
+    )
+
+
+def set_csrf_cookie(response: Response, csrf_token: str | None = None) -> None:
+    is_production = get_settings().environment == Environment.PROD
+    csrf_token = csrf_token or str(uuid4())
+
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
+        secure=is_production,
+        samesite="lax",
+        path="/api/auth",
+    )
+
+
+def auth_response(
+    access_token: str, refresh_token: str, status_code: int = 200
+) -> JSONResponse:
+    response = JSONResponse(
+        status_code=status_code,
+        content={
+            "access_token": access_token,
+            "token_type": "bearer",
+        },
+    )
+    set_refresh_cookie(response, refresh_token)
+    set_csrf_cookie(response)
+    return response

@@ -15,7 +15,14 @@ class DummyUserRepository(IUserRepository):
         return next((u for u in self.users.values() if u.username == username), None)
 
     async def get_by_email(self, email: str) -> User | None:
-        return next((u for u in self.users.values() if u.email == email), None)
+        return next(
+            (
+                u
+                for u in self.users.values()
+                if u.email == email and u.email_verified is True
+            ),
+            None,
+        )
 
     async def get_all(self) -> list[User]:
         return list(self.users.values())
