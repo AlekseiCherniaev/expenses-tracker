@@ -21,7 +21,7 @@ class UserModel(Base):
     )
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(
-        String(254), nullable=True, unique=True, index=True
+        String(254), nullable=True, unique=False, index=True
     )
     email_verified: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false"), nullable=False

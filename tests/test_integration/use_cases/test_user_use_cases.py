@@ -68,6 +68,7 @@ class TestUserUseCases:
         unique_user_create_dto,
         unique_user_entity,
     ):
+        unique_user_entity.email_verified = True
         setattr(unique_user_entity, change_field, value)
         await self._create_user(unique_user_entity)
 

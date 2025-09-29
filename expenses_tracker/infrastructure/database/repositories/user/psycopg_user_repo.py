@@ -19,7 +19,10 @@ class PsycopgUserRepository(IUserRepository):
 
     async def get_by_email(self, email: str) -> User | None:
         async with self._conn.cursor(row_factory=dict_row) as cursor:
-            await cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            await cursor.execute(
+                "SELECT * FROM users WHERE email = %s AND email_verified = %s",
+                (email, True),
+            )
             row = await cursor.fetchone()
             return User(**row) if row else None
 

@@ -46,15 +46,6 @@ class TestInternalUserApi:
         self, async_client, unique_user_create_request
     ):
         await self._create_user(async_client, unique_user_create_request)
-        request_conflict_email = unique_user_create_request.model_copy(
-            update={"username": "other_username"}
-        )
-        response = await async_client.post(
-            "/api/internal/users/create", json=request_conflict_email.model_dump()
-        )
-
-        assert response.status_code == 400
-        assert "User with email" in response.json()["detail"]
 
         request_conflict_username = unique_user_create_request.model_copy(
             update={"email": "other@test.com"}

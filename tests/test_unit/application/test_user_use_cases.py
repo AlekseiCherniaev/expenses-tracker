@@ -122,6 +122,7 @@ class TestUserUseCases:
         error_message,
     ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
+        user_entity.email_verified = True
         getattr(mock_repo, existing_field).return_value = user_entity
         getattr(mock_repo, none_field).return_value = None
 

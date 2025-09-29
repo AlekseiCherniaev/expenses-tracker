@@ -165,7 +165,11 @@ class TestAuthUserUseCases:
         unique_user_create_dto,
         unique_user_entity,
     ):
-        await self._create_user_with_hashed_password(unique_user_create_dto)
+        user = await self._create_user_with_hashed_password(unique_user_create_dto)
+        async with self.unit_of_work as uow:
+            user.email_verified = True
+            await uow.user_repository.update(user)
+
         conflicting_user_data = UserCreateDTO(
             username=value
             if change_field == "username"
