@@ -116,6 +116,7 @@ class UserUseCases:
             if user_data.email and user_data.email != user.email:
                 await self._validate_user_uniqueness(uow=uow, new_email=user_data.email)
                 user.email = user_data.email
+                user.email_verified = False
             if user_data.email_verified is not None:
                 user.email_verified = user_data.email_verified
             if user_data.password is not None:
