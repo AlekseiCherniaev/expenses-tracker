@@ -68,21 +68,6 @@ class TestAuthApi:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "username" in response.json()["detail"].lower()
 
-    async def test_register_conflict_email(
-        self, async_client, unique_user_create_request
-    ):
-        await self._register_user(async_client, unique_user_create_request)
-        conflict_request = InternalUserCreateRequest(
-            username="different_username",
-            password="different_password",
-            email=unique_user_create_request.email,
-        )
-        response = await async_client.post(
-            "/api/auth/register", json=conflict_request.model_dump()
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "email" in response.json()["detail"].lower()
-
     async def test_login_success(
         self, async_client, unique_user_create_request, login_request
     ):

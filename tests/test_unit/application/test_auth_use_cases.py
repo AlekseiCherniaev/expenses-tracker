@@ -85,6 +85,7 @@ class TestAuthUserUseCases:
         self, mock_unit_of_work, user_entity
     ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
+        user_entity.email_verified = True
         mock_repo.get_by_email.return_value = user_entity
 
         with pytest.raises(
@@ -139,6 +140,7 @@ class TestAuthUserUseCases:
         self, mock_unit_of_work, user_entity, user_create_dto
     ):
         mock_repo = mock_unit_of_work.__aenter__.return_value.user_repository
+        user_entity.email_verified = True
         mock_repo.get_by_email.return_value = user_entity
 
         with pytest.raises(
