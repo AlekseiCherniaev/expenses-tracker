@@ -27,7 +27,7 @@ class FastapiEmailService(IEmailService):
 
     async def send_verification_email(self, to: EmailStr, token: str) -> None:
         verification_link = (
-            f"https://{get_settings().domain}/auth/verify-email?email_token={token}"
+            f"https://{get_settings().domain}/verify-email?email_token={token}"
         )
 
         message = MessageSchema(
@@ -49,7 +49,9 @@ class FastapiEmailService(IEmailService):
             raise EmailSendingError(f"Failed to send verification email to {to}") from e
 
     async def send_password_reset_email(self, to: EmailStr, token: str) -> None:
-        reset_link = f"https://{get_settings().domain}/auth/reset-password?password_token={token}"
+        reset_link = (
+            f"https://{get_settings().domain}/reset-password?password_token={token}"
+        )
 
         message = MessageSchema(
             subject="Reset your password",
