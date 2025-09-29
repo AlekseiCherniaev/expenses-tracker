@@ -47,7 +47,7 @@ def set_csrf_cookie(response: Response, csrf_token: str | None = None) -> None:
         httponly=False,
         secure=is_production,
         samesite="lax",
-        path="/api/auth",
+        path="/",
     )
 
 
