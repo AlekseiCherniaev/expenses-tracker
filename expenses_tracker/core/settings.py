@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import computed_field, EmailStr, SecretStr
+from pydantic import computed_field, EmailStr, SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from expenses_tracker.core.constants import Environment
@@ -31,6 +31,10 @@ class Settings(BaseSettings):
 
     app_host: str = "127.0.0.1"
     app_port: int = 8000
+
+    sentry_dsn: str = Field(default="")
+    sentry_traces_sample_rate: float = 0.2
+    sentry_profiles_sample_rate: float = 0.1
 
     secret_key: str = "super-secret"
     algorithm: str = "HS256"

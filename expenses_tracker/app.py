@@ -21,6 +21,7 @@ from expenses_tracker.infrastructure.database.avatar_storages.minio_storage impo
 from expenses_tracker.infrastructure.database.db import (
     create_sqlalchemy_engine,
 )
+from expenses_tracker.infrastructure.monitoring.sentry import init_sentry
 from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
 )
@@ -67,7 +68,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
 
 def init_app() -> FastAPI:
     settings = get_settings()
+    init_sentry(settings)
     prepare_logger(log_level=settings.log_level)
+
     logger.info("Initializing app")
     app = FastAPI(**get_app_config(settings))
     app.mount(
@@ -79,4 +82,5 @@ def init_app() -> FastAPI:
     add_middlewares(app)
     for router in get_routers(settings.environment):
         app.include_router(router=router)
+
     return app

@@ -17,9 +17,11 @@ dependencies = [
     "pydantic[email]>=2.11.7",
     "pyjwt>=2.10.1",
     "redis>=6.4.0",
+    "sentry-sdk[fastapi]>=2.39.0",
     "slowapi>=0.1.9",
     "sqlalchemy[asyncio]>=2.0.43",
     "structlog>=25.4.0",
+    "structlog-sentry>=2.2.1",
     "toml>=0.10.2",
     "uvicorn>=0.35.0",
 ]

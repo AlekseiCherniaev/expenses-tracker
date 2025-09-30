@@ -1,11 +1,11 @@
 services:
   api:
-    image: ${DOCKERHUB_USERNAME}/expenses_tracker:latest
+    build: .
     container_name: api
     networks:
       - common_network
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     env_file:
       - .env
     depends_on:
