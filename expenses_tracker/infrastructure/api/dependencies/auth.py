@@ -72,11 +72,10 @@ def oauth_response(
     error_message: str | None = None,
 ) -> RedirectResponse:
     if error_message or access_token is None or refresh_token is None:
-        frontend_url = f"/login?error={error_message}"
+        frontend_url = f"https://{get_settings().domain}/login?error={error_message}"
         return RedirectResponse(url=frontend_url)
 
-    frontend_url = "/oauth/callback"
-
+    frontend_url = f"https://{get_settings().domain}/oauth/callback"
     response = RedirectResponse(url=frontend_url)
     response.set_cookie(
         key="access_token",

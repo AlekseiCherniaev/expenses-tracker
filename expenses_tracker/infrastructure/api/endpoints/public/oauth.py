@@ -9,6 +9,7 @@ from starlette.responses import RedirectResponse
 
 from expenses_tracker.application.dto.user import UserCreateDTO
 from expenses_tracker.application.use_cases.oauth import OAuthUserUseCases
+from expenses_tracker.core.settings import get_settings
 from expenses_tracker.infrastructure.api.dependencies.auth import oauth_response
 from expenses_tracker.infrastructure.di import get_oauth_user_use_cases
 from expenses_tracker.infrastructure.security.oauth_providers import oauth
@@ -21,7 +22,7 @@ logger = structlog.get_logger(__name__)
 @router.get("/login-google")
 async def login_via_google(request: Request) -> RedirectResponse:
     logger.debug("Logging in via Google")
-    redirect_uri = "http://127.0.0.1:8000/api/oauth/auth-via-google"
+    redirect_uri = f"https://{get_settings().domain}/api/oauth/auth-via-google"
     result = await oauth.google.authorize_redirect(request, redirect_uri)
     logger.debug("Logged in via Google")
     return result  # type: ignore
