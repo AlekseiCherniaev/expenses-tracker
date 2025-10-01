@@ -31,6 +31,9 @@ from expenses_tracker.infrastructure.api.endpoints.public.expense import (
 from expenses_tracker.infrastructure.api.endpoints.public.health import (
     router as health_router,
 )
+from expenses_tracker.infrastructure.api.endpoints.public.oauth import (
+    router as oauth_user_router,
+)
 from expenses_tracker.infrastructure.api.endpoints.public.user import (
     router as user_router,
 )
@@ -39,6 +42,7 @@ from expenses_tracker.infrastructure.api.endpoints.public.user import (
 def create_public_router() -> APIRouter:
     router = APIRouter(prefix="/api")
     router.include_router(auth_user_router)
+    router.include_router(oauth_user_router)
     router.include_router(user_router)
     router.include_router(category_router)
     router.include_router(expense_router)

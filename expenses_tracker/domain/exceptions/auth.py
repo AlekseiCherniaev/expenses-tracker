@@ -23,3 +23,7 @@ class EmailAlreadyVerified(DomainException):
 
 class EmailSendingError(DomainException):
     pass
+
+
+class OAuthError(DomainException):
+    pass

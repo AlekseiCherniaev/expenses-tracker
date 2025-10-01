@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from starlette.responses import Response, JSONResponse
+from starlette.responses import Response, JSONResponse, RedirectResponse
 
 from expenses_tracker.application.interfaces.token_service import ITokenService
 from expenses_tracker.core.constants import TokenType, Environment
@@ -61,6 +61,32 @@ def auth_response(
             "token_type": "bearer",
         },
     )
+    set_refresh_cookie(response, refresh_token)
+    set_csrf_cookie(response)
+    return response
+
+
+def oauth_response(
+    access_token: str | None = None,
+    refresh_token: str | None = None,
+    error_message: str | None = None,
+) -> RedirectResponse:
+    if error_message or access_token is None or refresh_token is None:
+        frontend_url = f"/login?error={error_message}"
+        return RedirectResponse(url=frontend_url)
+
+    frontend_url = "/oauth/callback"
+
+    response = RedirectResponse(url=frontend_url)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=get_settings().access_token_expire_minutes * 60,
+    )
+
     set_refresh_cookie(response, refresh_token)
     set_csrf_cookie(response)
     return response
