@@ -16,6 +16,7 @@ from expenses_tracker.application.use_cases.auth import AuthUserUseCases
 from expenses_tracker.application.use_cases.budget import BudgetUseCases
 from expenses_tracker.application.use_cases.category import CategoryUseCases
 from expenses_tracker.application.use_cases.expense import ExpenseUseCases
+from expenses_tracker.application.use_cases.oauth import OAuthUserUseCases
 from expenses_tracker.application.use_cases.upload_avatar_use_cases import (
     UserAvatarUseCase,
 )
@@ -129,4 +130,14 @@ async def get_auth_user_use_cases(
         token_service=token_service,
         cache_service=cache_service,
         email_service=email_service,
+    )
+
+
+async def get_oauth_user_use_cases(
+    uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
+    token_service: ITokenService = Depends(get_token_service),
+    password_hasher: IPasswordHasher = Depends(get_password_hasher),
+) -> OAuthUserUseCases:
+    return OAuthUserUseCases(
+        unit_of_work=uow, password_hasher=password_hasher, token_service=token_service
     )

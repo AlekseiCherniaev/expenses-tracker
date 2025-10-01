@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     password_reset_token_expire_hours: int = 1
     clock_skew_seconds: int = 180
 
+    google_client_id: str = "google-client-id"
+    google_client_secret: str = "google-client-secret"
+    github_client_id: str = "github-client-id"
+    github_client_secret: str = "github-client"
+
     domain: str = "localhost:8000"
     email_password: SecretStr = SecretStr("")
     sender_email: EmailStr = "sender_email@gmail.com"

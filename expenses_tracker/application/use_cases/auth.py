@@ -35,7 +35,7 @@ class AuthUserUseCases:
         self._unit_of_work = unit_of_work
         self._password_hasher = password_hasher
         self._token_service = token_service
-        self.email_service = email_service
+        self._email_service = email_service
         self._cache_service = cache_service
 
     @staticmethod
@@ -188,7 +188,7 @@ class AuthUserUseCases:
                 token_type=TokenType.EMAIL_VERIFICATION,
             )
 
-            await self.email_service.send_verification_email(
+            await self._email_service.send_verification_email(
                 to=user.email, token=email_token
             )
             logger.bind(user_id=user.id).debug("Sent email verification email")
@@ -236,7 +236,7 @@ class AuthUserUseCases:
                 token_type=TokenType.RESET_PASSWORD,
             )
 
-            await self.email_service.send_password_reset_email(
+            await self._email_service.send_password_reset_email(
                 to=user.email, token=password_reset_token
             )
             logger.bind(user_id=user.id).debug("Sent password reset email")

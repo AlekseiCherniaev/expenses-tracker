@@ -115,6 +115,7 @@ async def logout_user(
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
     response.delete_cookie("refresh_token", path="/api/auth")
     response.delete_cookie("csrf_token", path="/api/auth")
+    request.session.pop("user", None)
     return response
 
 
