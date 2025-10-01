@@ -1,6 +1,6 @@
 services:
   api:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/expenses_tracker:latest
     container_name: api
     networks:
       - common_network
