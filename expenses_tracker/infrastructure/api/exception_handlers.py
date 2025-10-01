@@ -10,6 +10,7 @@ from expenses_tracker.domain.exceptions.auth import (
     Unauthorized,
     EmailAlreadyVerified,
     EmailSendingError,
+    OAuthError,
 )
 from expenses_tracker.domain.exceptions.budget import BudgetNotFound
 from expenses_tracker.domain.exceptions.category import CategoryNotFound
@@ -31,6 +32,7 @@ EXCEPTION_STATUS_MAP: dict[type[Exception], int] = {
     Unauthorized: status.HTTP_401_UNAUTHORIZED,
     TokenExpired: status.HTTP_401_UNAUTHORIZED,
     InvalidToken: status.HTTP_401_UNAUTHORIZED,
+    OAuthError: status.HTTP_400_BAD_REQUEST,
     RateLimitExceeded: status.HTTP_429_TOO_MANY_REQUESTS,
 }
 

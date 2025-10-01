@@ -20,6 +20,7 @@ class UserCreateDTO:
     username: str
     email: str | None
     password: str
+    avatar_url: str | None = None
 
 
 @dataclass
