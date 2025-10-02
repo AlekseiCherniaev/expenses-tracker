@@ -12,7 +12,7 @@ from expenses_tracker.infrastructure.api.exception_handlers import (
     register_exception_handlers,
 )
 from expenses_tracker.infrastructure.api.main_router import get_routers
-from expenses_tracker.infrastructure.api.middlewares import add_middlewares
+from expenses_tracker.infrastructure.api.middlewares.middlewares import add_middlewares
 from expenses_tracker.infrastructure.api.rate_limiter import init_rate_limiter
 from expenses_tracker.infrastructure.cache.redis_cache_service import RedisService
 from expenses_tracker.infrastructure.database.avatar_storages.minio_storage import (
