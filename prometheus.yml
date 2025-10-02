@@ -1,4 +1,6 @@
 global:
+  external_labels:
+    monitor: 'https://monitoring.expenses-tracker.online/prometheus/'
   scrape_interval: 15s
 
 scrape_configs:
