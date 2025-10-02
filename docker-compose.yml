@@ -143,7 +143,8 @@ services:
       "-d", "${DOMAIN}",
       "-d", "www.${DOMAIN}",
       "-d", "storage.${DOMAIN}",
-      "-d", "monitoring.${DOMAIN}",
+      "-d", "grafana.${DOMAIN}",
+      "-d", "prometheus.${DOMAIN}",
       "--expand"
     ]
 
@@ -168,7 +169,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     expose:
-      - "3000"
+      - "9090"
     networks:
       - common_network
     depends_on:
@@ -182,8 +183,7 @@ services:
     networks:
       - common_network
     environment:
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_ROOT_URL=https://grafana.expenses-tracker.online/
     depends_on:
       - prometheus
     volumes:
