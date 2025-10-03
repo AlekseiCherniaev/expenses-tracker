@@ -10,6 +10,14 @@ class ICacheService(ABC, Generic[T]):
         pass
 
     @abstractmethod
+    async def get_keys_by_pattern(self, pattern: str) -> list[str]:
+        pass
+
+    @abstractmethod
+    async def delete_keys_by_pattern(self, pattern: str) -> None:
+        pass
+
+    @abstractmethod
     async def set(self, key: str, value: T, ttl: int | None = None) -> None:
         pass
 
