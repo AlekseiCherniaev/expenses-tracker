@@ -35,8 +35,8 @@ def get_token_service(request: Request) -> ITokenService:
     return request.app.state.token_service  # type: ignore
 
 
-def get_redis_service(request: Request) -> ICacheService[Any]:
-    return request.app.state.redis_service  # type: ignore
+def get_cache_service(request: Request) -> ICacheService[Any]:
+    return request.app.state.cache_service  # type: ignore
 
 
 def get_password_hasher(request: Request) -> IPasswordHasher:
@@ -69,7 +69,7 @@ async def get_psycopg_uow(request: Request) -> PsycopgUnitOfWork:
 async def get_user_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     password_hasher: IPasswordHasher = Depends(get_password_hasher),
-    cache_service: ICacheService[UserDTO] = Depends(get_redis_service),
+    cache_service: ICacheService[UserDTO] = Depends(get_cache_service),
 ) -> UserUseCases:
     return UserUseCases(
         unit_of_work=uow,
@@ -81,7 +81,7 @@ async def get_user_use_cases(
 async def get_upload_avatar_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     avatar_storage: IAvatarStorage = Depends(get_avatar_storage),
-    cache_service: ICacheService[UserDTO] = Depends(get_redis_service),
+    cache_service: ICacheService[UserDTO] = Depends(get_cache_service),
 ) -> UserAvatarUseCase:
     return UserAvatarUseCase(
         unit_of_work=uow,
@@ -93,7 +93,7 @@ async def get_upload_avatar_use_cases(
 async def get_category_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[CategoryDTO | list[CategoryDTO]] = Depends(
-        get_redis_service
+        get_cache_service
     ),
 ) -> CategoryUseCases:
     return CategoryUseCases(unit_of_work=uow, cache_service=cache_service)
@@ -102,7 +102,7 @@ async def get_category_use_cases(
 async def get_expense_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[ExpenseDTO | list[ExpenseDTO]] = Depends(
-        get_redis_service
+        get_cache_service
     ),
 ) -> ExpenseUseCases:
     return ExpenseUseCases(unit_of_work=uow, cache_service=cache_service)
@@ -111,7 +111,7 @@ async def get_expense_use_cases(
 async def get_budget_use_cases(
     uow: IUnitOfWork = Depends(get_sqlalchemy_uow),
     cache_service: ICacheService[BudgetDTO | list[BudgetDTO]] = Depends(
-        get_redis_service
+        get_cache_service
     ),
 ) -> BudgetUseCases:
     return BudgetUseCases(unit_of_work=uow, cache_service=cache_service)
@@ -122,7 +122,7 @@ async def get_auth_user_use_cases(
     token_service: ITokenService = Depends(get_token_service),
     password_hasher: IPasswordHasher = Depends(get_password_hasher),
     email_service: IEmailService = Depends(get_email_service),
-    cache_service: ICacheService[TokenPayload] = Depends(get_redis_service),
+    cache_service: ICacheService[TokenPayload] = Depends(get_cache_service),
 ) -> AuthUserUseCases:
     return AuthUserUseCases(
         unit_of_work=uow,

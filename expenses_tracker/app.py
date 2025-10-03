@@ -54,14 +54,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.psycopg_dsn = get_settings().sync_postgres_url
     app.state.token_service = JWTTokenService()
     app.state.password_hasher = BcryptPasswordHasher()
-    app.state.redis_service = RedisService()
+    app.state.cache_service = RedisService()
     app.state.email_service = FastapiEmailService()
     app.state.avatar_storage = MinioAvatarStorage()
     app.state.limiter = init_rate_limiter(get_settings().redis_dsn)
     logger.info("Startup completed")
     yield
     await app.state.sqlalchemy_engine.dispose()
-    await app.state.redis_service.close()
+    await app.state.cache_service.close()
     app.state.avatar_storage.close()
     logger.debug("Server stopped")
 

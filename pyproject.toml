@@ -19,6 +19,7 @@ dependencies = [
     "psycopg[binary,pool]>=3.2.10",
     "pydantic-settings>=2.10.1",
     "pydantic[email]>=2.11.7",
+    "pyinstrument>=5.1.1",
     "pyjwt>=2.10.1",
     "redis>=6.4.0",
     "sentry-sdk[fastapi]>=2.39.0",
