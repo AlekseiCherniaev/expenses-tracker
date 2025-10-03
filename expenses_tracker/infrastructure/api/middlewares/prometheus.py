@@ -37,6 +37,6 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
 
 def setup_metrics_route(app: FastAPI) -> None:
-    @app.get("/metrics")
+    @app.get("/api/metrics")
     async def metrics() -> Response:
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

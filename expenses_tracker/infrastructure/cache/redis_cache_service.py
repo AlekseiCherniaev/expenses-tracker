@@ -21,7 +21,11 @@ class RedisService(Generic[T], ICacheService[T]):
 
     def _serialize(self, value: T) -> bytes:
         """Serialize an object (DTO, dataclass, dict, list) to JSON bytes."""
-        if isinstance(value, list):
+        if isinstance(value, str):
+            return value.encode("utf-8")
+        elif isinstance(value, bytes):
+            return value
+        elif isinstance(value, list):
             data = [self._model_dump(v) for v in value]
         else:
             data = self._model_dump(value)  # type: ignore
@@ -31,6 +35,17 @@ class RedisService(Generic[T], ICacheService[T]):
     def _deserialize(value: str, serializer: type[T]) -> T | None:
         """Deserialize JSON from Redis to an object/list."""
         try:
+            if serializer is str:
+                if isinstance(value, str):
+                    return cast(T, value)
+                elif isinstance(value, bytes):
+                    return cast(T, value.decode("utf-8"))
+            if serializer is bytes:
+                if isinstance(value, bytes):
+                    return cast(T, value)
+                elif isinstance(value, str):
+                    return cast(T, value.encode("utf-8"))
+
             obj = orjson.loads(value)
             if get_origin(serializer) is list:
                 model = get_args(serializer)[0]
@@ -79,6 +94,22 @@ class RedisService(Generic[T], ICacheService[T]):
             logger.bind(key=key).debug("Delete cache")
         except Exception as e:
             logger.bind(key=key, error=str(e)).warning("Redis DELETE failed")
+
+    async def get_keys_by_pattern(self, pattern: str) -> list[str]:
+        try:
+            keys = []
+            cursor = "0"
+            while cursor != 0:  # type: ignore
+                cursor, found_keys = await self._redis.scan(
+                    cursor=cursor, match=pattern, count=1000
+                )
+                keys.extend(found_keys)
+            return keys
+        except Exception as e:
+            logger.bind(pattern=pattern, error=str(e)).warning(
+                "Redis GET KEYS BY PATTERN failed"
+            )
+            return []
 
     async def delete_keys_by_pattern(self, pattern: str) -> None:
         """
