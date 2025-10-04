@@ -66,13 +66,12 @@ class PyInstrumentMiddleware(BaseHTTPMiddleware):
     ):
         super().__init__(app)
         self.excluded_paths = excluded_paths or [
-            "/static",
+            "/api/internal/static",
             "/api/health",
             "/api/profiling",
-            "/metrics",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
+            "/api/metrics",
+            "/api/internal/docs",
+            "/api/internal/openapi.json",
         ]
 
     async def dispatch(
