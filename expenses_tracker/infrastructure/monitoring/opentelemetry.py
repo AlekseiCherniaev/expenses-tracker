@@ -10,14 +10,14 @@ from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Tracer
-from sqlalchemy import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from expenses_tracker.core.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 
 
-def setup_opentelemetry(app: FastAPI, engine: Engine) -> TracerProvider | None:
+def setup_opentelemetry(app: FastAPI, engine: AsyncEngine) -> TracerProvider | None:
     if not get_settings().otel_enabled:
         logger.info("OpenTelemetry instrumentation is disabled")
         return None
@@ -36,7 +36,7 @@ def setup_opentelemetry(app: FastAPI, engine: Engine) -> TracerProvider | None:
 
     FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
 
-    SQLAlchemyInstrumentor().instrument(engine=engine)
+    SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
     PsycopgInstrumentor().instrument()
 
     RedisInstrumentor().instrument()

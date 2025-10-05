@@ -21,6 +21,7 @@ from expenses_tracker.infrastructure.database.avatar_storages.minio_storage impo
 from expenses_tracker.infrastructure.database.db import (
     create_sqlalchemy_engine,
 )
+from expenses_tracker.infrastructure.monitoring.opentelemetry import setup_opentelemetry
 from expenses_tracker.infrastructure.monitoring.sentry import init_sentry
 from expenses_tracker.infrastructure.security.bcrypt_password_hasher import (
     BcryptPasswordHasher,
@@ -58,6 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.email_service = FastapiEmailService()
     app.state.avatar_storage = MinioAvatarStorage()
     app.state.limiter = init_rate_limiter(get_settings().redis_dsn)
+    setup_opentelemetry(app=app, engine=app.state.sqlalchemy_engine)
     logger.info("Startup completed")
     yield
     await app.state.sqlalchemy_engine.dispose()
