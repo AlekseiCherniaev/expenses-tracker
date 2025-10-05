@@ -28,6 +28,8 @@ services:
       - .env
     volumes:
       - postgres:/var/lib/postgresql/data
+    mem_limit: 1024m
+    cpus: 0.5
     deploy:
       resources:
         limits:
@@ -56,6 +58,8 @@ services:
       - .env
     volumes:
       - minio-data:/data
+    mem_limit: 256m
+    cpus: 0.2
     deploy:
       resources:
         limits:
@@ -76,17 +80,21 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
     env_file:
       - .env
+    mem_limit: 64m
+    cpus: 0.1
     deploy:
       resources:
         limits:
           cpus: '0.10'
-          memory: 32M
+          memory: 64M
         reservations:
           cpus: '0.05'
-          memory: 16M
+          memory: 32M
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
@@ -180,14 +188,23 @@ services:
     container_name: grafana
     expose:
       - "3000"
+    mem_limit: 512m
+    cpus: 0.3
     networks:
       - common_network
     environment:
-      - GF_SERVER_ROOT_URL=https://grafana.expenses-tracker.online/
+      - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN}/
+      - GF_INSTALL_PLUGINS=grafana-pyroscope-datasource
+      - HTTP_PROXY=http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
+      - HTTPS_PROXY=http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
+      - NO_PROXY=localhost,127.0.0.1
     depends_on:
       - prometheus
+      - loki
+      - tempo
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
 
   loki:
     image: grafana/loki:2.9.2
@@ -195,8 +212,9 @@ services:
     expose:
       - "3100"
     command: -config.file=/etc/loki/local-config.yaml
-    env_file:
-      - .env
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
     volumes:
       - ./configs/loki.yaml:/etc/loki/local-config.yaml
       - loki-data:/loki
@@ -220,6 +238,47 @@ services:
     networks:
       - common_network
 
+  tempo_init:
+    image: grafana/tempo:latest
+    user: root
+    entrypoint: ["chown"]
+    command: ["-R", "10001:10001", "/var/tempo"]
+    volumes:
+      - tempo-wal:/var/tempo/wal
+      - tempo-blocks:/var/tempo/blocks
+      - tempo-generator:/var/tempo/generator
+    networks:
+      - common_network
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: -config.file=/etc/tempo.yaml
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./configs/tempo.yaml:/etc/tempo.yaml
+      - tempo-wal:/var/tempo/wal
+      - tempo-blocks:/var/tempo/blocks
+      - tempo-generator:/var/tempo/generator
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - common_network
+    depends_on:
+      tempo_init:
+          condition: service_completed_successfully
+      minio:
+          condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/3200' || exit 0" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   common_network:
     name: common_network
@@ -227,6 +286,7 @@ networks:
 
 volumes:
   minio-data:
+  redis-data:
   postgres:
     driver: local
     name: expenses_postgres_data
@@ -235,3 +295,6 @@ volumes:
   grafana-data:
   loki-data:
   promtail-positions:
+  tempo-wal:
+  tempo-blocks:
+  tempo-generator:
