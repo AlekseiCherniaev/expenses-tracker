@@ -13,7 +13,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")' || exit 1"]
+      test: [ "CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")' || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,7 +65,7 @@ services:
           cpus: '0.10'
           memory: 128M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -99,7 +99,7 @@ services:
   migrations:
     container_name: migrations
     build: .
-    command: ["/app/.venv/bin/alembic", "upgrade", "head"]
+    command: [ "/app/.venv/bin/alembic", "upgrade", "head" ]
     env_file:
       - .env
     depends_on:
@@ -167,7 +167,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     expose:
       - "9090"
     networks:
@@ -189,6 +189,32 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
 
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    command:
+      - config.file=/etc/loki/local-config.yaml
+    env_file:
+      - .env
+    volumes:
+      - ./configs/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - common_network
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./configs/promtail.yaml:/etc/promtail/config.yml:ro
+      - promtail-positions:/tmp
+    command:
+      - config.file=/etc/promtail/config.yml
+    networks:
+      - common_network
+
 networks:
   common_network:
     name: common_network
@@ -202,3 +228,5 @@ volumes:
   certbot-etc:
   certbot-var:
   grafana-data:
+  loki-data:
+  promtail-positions:
