@@ -11,6 +11,9 @@ ingester:
       kvstore:
         store: inmemory
       replication_factor: 1
+  wal:
+    enabled: true
+    dir: /loki/wal
   chunk_idle_period: 5m
   chunk_retain_period: 30s
   max_transfer_retries: 0
@@ -34,8 +37,8 @@ storage_config:
   aws:
     endpoint: http://minio:9000
     bucketnames: loki
-    access_key_id: ${MINIO_ACCESS_KEY}
-    secret_access_key: ${MINIO_SECRET_KEY}
+    access_key_id: ${MINIO_ROOT_USER}
+    secret_access_key: ${MINIO_ROOT_PASSWORD}
     insecure: true
 
 limits_config:
