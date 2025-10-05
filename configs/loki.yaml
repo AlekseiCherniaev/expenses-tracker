@@ -35,11 +35,11 @@ storage_config:
     shared_store: s3
 
   aws:
+    s3: http://minio:9000
     endpoint: http://minio:9000
     bucketnames: loki
-    access_key_id: ${MINIO_ROOT_USER}
-    secret_access_key: ${MINIO_ROOT_PASSWORD}
     insecure: true
+    s3forcepathstyle: true
 
 limits_config:
   retention_period: 168h
