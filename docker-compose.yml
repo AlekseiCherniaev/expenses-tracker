@@ -77,6 +77,24 @@ services:
     networks:
       - common_network
 
+  minio-init:
+    image: minio/mc:latest
+    container_name: minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+        mc mb -p myminio/loki &&
+        mc mb -p myminio/tempo &&
+        echo '✅ MinIO buckets created successfully'
+      "
+    networks:
+      - common_network
+    env_file:
+      - .env
+
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -196,7 +214,7 @@ services:
       - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN}/
       - GF_INSTALL_PLUGINS=grafana-pyroscope-datasource
       - HTTP_PROXY=http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
-      - HTTPS_PROXY=http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
+      - HTTPS_PROXY=https://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
       - NO_PROXY=localhost,127.0.0.1
     depends_on:
       - prometheus
@@ -221,7 +239,8 @@ services:
     networks:
       - common_network
     depends_on:
-      - minio
+      minio-init:
+        condition: service_completed_successfully
 
   promtail:
     image: grafana/promtail:2.9.2
@@ -238,7 +257,7 @@ services:
     networks:
       - common_network
 
-  tempo_init:
+  tempo-init:
     image: grafana/tempo:latest
     user: root
     entrypoint: ["chown"]
@@ -269,10 +288,10 @@ services:
     networks:
       - common_network
     depends_on:
-      tempo_init:
+      tempo-init:
           condition: service_completed_successfully
-      minio:
-          condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: [ "CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/3200' || exit 0" ]
       interval: 30s
