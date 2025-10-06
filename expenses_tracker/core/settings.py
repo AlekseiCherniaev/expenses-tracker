@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     sentry_traces_sample_rate: float = 0.2
     sentry_profiles_sample_rate: float = 0.1
 
-    otel_enabled: bool = True
+    otel_enabled: bool = False
     otel_endpoint: str = "localhost:4318"
     otel_service_name: str = "expenses-tracker"
 
