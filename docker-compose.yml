@@ -13,11 +13,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      nginx:
+      minio:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")' || exit 1" ]
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -147,7 +147,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-www:/var/www/certbot
@@ -155,7 +155,7 @@ services:
     networks:
       - common_network
     depends_on:
-      minio:
+      api:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
@@ -327,6 +327,7 @@ services:
 
   tempo-init:
     image: grafana/tempo:latest
+    container_name: tempo_init
     user: root
     entrypoint: [ "chown" ]
     command: [ "-R", "10001:10001", "/var/tempo" ]
