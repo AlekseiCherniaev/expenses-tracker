@@ -7,6 +7,7 @@ from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Tracer
@@ -24,7 +25,14 @@ def setup_opentelemetry(app: FastAPI, engine: AsyncEngine) -> TracerProvider | N
 
     logger.info("Initializing OpenTelemetry instrumentation")
 
-    tracer_provider = TracerProvider()
+    resource = Resource.create(
+        {
+            SERVICE_NAME: get_settings().otel_service_name,
+            SERVICE_VERSION: get_settings().project_version,
+        }
+    )
+
+    tracer_provider = TracerProvider(resource=resource)
     trace.set_tracer_provider(tracer_provider)
 
     otlp_exporter = OTLPSpanExporter(
