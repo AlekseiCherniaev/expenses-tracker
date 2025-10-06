@@ -1,8 +1,15 @@
+from typing import TYPE_CHECKING, Any
+
 import orjson
 import structlog
-from boto3 import client
+from boto3 import client as boto3_client
 from botocore.client import Config
 from botocore.exceptions import ClientError
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
+else:
+    S3Client = Any
 
 from expenses_tracker.application.interfaces.avatar_storage import IAvatarStorage
 from expenses_tracker.core.settings import get_settings
@@ -12,32 +19,53 @@ logger = structlog.getLogger(__name__)
 
 class MinioAvatarStorage(IAvatarStorage):
     def __init__(self) -> None:
-        self._client = client(
+        self._bucket_name = get_settings().minio_avatar_bucket
+        self._internal_client: S3Client | None = None
+        self._public_client: S3Client | None = None
+
+        self._ensure_bucket()
+        logger.info("MinIO storage initialized", bucket=self._bucket_name)
+
+    @property
+    def internal_client(self) -> S3Client:
+        if self._internal_client is None:
+            self._internal_client = self._create_client(
+                get_settings().minio_internal_endpoint
+            )
+        return self._internal_client
+
+    @property
+    def public_client(self) -> S3Client:
+        if self._public_client is None:
+            self._public_client = self._create_client(
+                get_settings().minio_public_endpoint
+            )
+        return self._public_client
+
+    @staticmethod
+    def _create_client(endpoint_url: str) -> S3Client:
+        return boto3_client(
             "s3",
-            endpoint_url=get_settings().minio_public_endpoint,
+            endpoint_url=endpoint_url,
             aws_access_key_id=get_settings().minio_root_user,
             aws_secret_access_key=get_settings().minio_root_password,
             config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
             region_name="us-east-1",
         )
-        self._bucket_name = get_settings().minio_avatar_bucket
 
-        self.ensure_bucket()
-        logger.info("MinIO client initialized")
-
-    def ensure_bucket(self) -> None:
+    def _ensure_bucket(self) -> None:
         try:
-            self._client.head_bucket(Bucket=self._bucket_name)
+            self.internal_client.head_bucket(Bucket=self._bucket_name)
             logger.bind(bucket=self._bucket_name).info("Bucket exists")
             self._set_bucket_policy()
         except ClientError as e:
             if e.response["Error"]["Code"] in ("404", "NoSuchBucket"):
                 try:
-                    self._client.create_bucket(Bucket=self._bucket_name)
+                    self.internal_client.create_bucket(Bucket=self._bucket_name)
                     logger.bind(bucket=self._bucket_name).info("Bucket created")
                     self._set_bucket_policy()
-                except ClientError:
-                    logger.bind(e=e).error("Failed to create bucket")
+                except ClientError as e2:
+                    logger.bind(e2=e2).error("Failed to create bucket")
                     raise
             else:
                 logger.bind(e=e).error("Error checking bucket")
@@ -56,8 +84,9 @@ class MinioAvatarStorage(IAvatarStorage):
             ],
         }
         try:
-            self._client.put_bucket_policy(
-                Bucket=self._bucket_name, Policy=orjson.dumps(policy).decode("utf-8")
+            self.internal_client.put_bucket_policy(
+                Bucket=self._bucket_name,
+                Policy=orjson.dumps(policy).decode("utf-8"),
             )
             logger.bind(bucket=self._bucket_name).info("Public read policy set")
         except ClientError as e:
@@ -69,7 +98,7 @@ class MinioAvatarStorage(IAvatarStorage):
         )
 
     def generate_upload_url(self, object_name: str, expires_in: int = 3600) -> str:
-        return self._client.generate_presigned_url(
+        return self.public_client.generate_presigned_url(
             "put_object",
             Params={
                 "Bucket": self._bucket_name,
@@ -81,10 +110,7 @@ class MinioAvatarStorage(IAvatarStorage):
 
     def object_exists(self, object_name: str) -> bool:
         try:
-            self._client.head_object(
-                Bucket=self._bucket_name,
-                Key=object_name,
-            )
+            self.internal_client.head_object(Bucket=self._bucket_name, Key=object_name)
             return True
         except ClientError as e:
             if e.response["Error"]["Code"] in ("404", "NoSuchBucket"):
@@ -93,9 +119,8 @@ class MinioAvatarStorage(IAvatarStorage):
 
     def delete_object(self, object_name: str) -> bool:
         try:
-            self._client.delete_object(
-                Bucket=self._bucket_name,
-                Key=object_name,
+            self.internal_client.delete_object(
+                Bucket=self._bucket_name, Key=object_name
             )
             logger.bind(bucket=self._bucket_name, key=object_name).info(
                 "Deleted object from MinIO"
@@ -119,5 +144,8 @@ class MinioAvatarStorage(IAvatarStorage):
         return content_types.get(extension, "application/octet-stream")
 
     def close(self) -> None:
-        self._client.close()
-        logger.info("MinIO client closed")
+        if self._internal_client:
+            self._internal_client.close()
+        if self._public_client:
+            self._public_client.close()
+        logger.info("MinIO clients closed")
