@@ -91,6 +91,7 @@ def override_settings(
         redis_port=redis_container["port"],
         redis_db=0,
         minio_public_endpoint=minio_container["endpoint"],
+        minio_internal_endpoint=minio_container["endpoint"],
         minio_root_user=minio_container["access_key"],
         minio_root_password=minio_container["secret_key"],
     )
