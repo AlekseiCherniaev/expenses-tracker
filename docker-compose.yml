@@ -13,7 +13,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
+      nginx:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")' || exit 1" ]
@@ -155,7 +155,7 @@ services:
     networks:
       - common_network
     depends_on:
-      api:
+      minio:
         condition: service_healthy
 
   certbot:
