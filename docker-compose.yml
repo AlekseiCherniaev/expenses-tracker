@@ -2,22 +2,22 @@ services:
   api:
     image: ${DOCKERHUB_USERNAME}/expenses_tracker:latest
     container_name: api
-    networks:
-      - common_network
     expose:
       - 8000
     env_file:
       - .env
+    networks:
+      - common_network
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")' || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
 
   postgres:
     image: postgres:15-alpine
@@ -28,8 +28,13 @@ services:
       - .env
     volumes:
       - postgres:/var/lib/postgresql/data
-    mem_limit: 1024m
-    cpus: 0.5
+    networks:
+      - common_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -38,14 +43,9 @@ services:
         reservations:
           cpus: '0.2'
           memory: 256M
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    mem_limit: 1024m
+    cpus: 0.5
     restart: unless-stopped
-    networks:
-      - common_network
 
   minio:
     image: minio/minio:latest
@@ -58,8 +58,13 @@ services:
       - .env
     volumes:
       - minio-data:/data
-    mem_limit: 256m
-    cpus: 0.2
+    networks:
+      - common_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -68,18 +73,17 @@ services:
         reservations:
           cpus: '0.10'
           memory: 128M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    mem_limit: 256m
+    cpus: 0.2
     restart: unless-stopped
-    networks:
-      - common_network
 
   minio-init:
     image: minio/mc:latest
     container_name: minio_init
+    env_file:
+      - .env
+    networks:
+      - common_network
     depends_on:
       minio:
         condition: service_healthy
@@ -88,23 +92,24 @@ services:
         mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
         mc mb -p myminio/loki &&
         mc mb -p myminio/tempo &&
-        echo '✅ MinIO buckets created successfully'
+        echo 'MinIO buckets created successfully'
       "
-    networks:
-      - common_network
-    env_file:
-      - .env
 
   redis:
     image: redis:7-alpine
     container_name: redis
     command: [ "redis-server", "--appendonly", "yes" ]
-    volumes:
-      - redis-data:/data
     env_file:
       - .env
-    mem_limit: 64m
-    cpus: 0.1
+    volumes:
+      - redis-data:/data
+    networks:
+      - common_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -113,26 +118,22 @@ services:
         reservations:
           cpus: '0.05'
           memory: 32M
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    mem_limit: 64m
+    cpus: 0.1
     restart: unless-stopped
-    networks:
-      - common_network
+
 
   migrations:
-    container_name: migrations
     build: .
+    container_name: migrations
     command: [ "/app/.venv/bin/alembic", "upgrade", "head" ]
     env_file:
       - .env
+    networks:
+      - common_network
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - common_network
 
   nginx:
     image: ${DOCKERHUB_USERNAME}/expenses_frontend:latest
@@ -146,19 +147,19 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-www:/var/www/certbot
       - /etc/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
-    depends_on:
-      - api
     networks:
       - common_network
+    depends_on:
+      - api
 
   certbot:
     image: certbot/certbot
     container_name: certbot
+    env_file:
+      - .env
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-    env_file:
-      - .env
     command: [
       "certonly",
       "--standalone",
@@ -184,18 +185,19 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-www:/var/www/certbot
       - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx nginx -s reload; sleep 12h; done"
-    restart: unless-stopped
     networks:
       - common_network
+    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx nginx -s reload; sleep 12h; done"
+    restart: unless-stopped
+
 
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    volumes:
-      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     expose:
       - "9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - common_network
     depends_on:
@@ -206,23 +208,23 @@ services:
     container_name: grafana
     expose:
       - "3000"
-    mem_limit: 512m
-    cpus: 0.3
-    networks:
-      - common_network
     environment:
       - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN}/
       - GF_INSTALL_PLUGINS=grafana-pyroscope-datasource
       - HTTP_PROXY=http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
       - HTTPS_PROXY=https://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
       - NO_PROXY=localhost,127.0.0.1
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - common_network
     depends_on:
       - prometheus
       - loki
       - tempo
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    mem_limit: 512m
+    cpus: 0.3
 
   loki:
     image: grafana/loki:2.9.2
@@ -260,8 +262,8 @@ services:
   tempo-init:
     image: grafana/tempo:latest
     user: root
-    entrypoint: ["chown"]
-    command: ["-R", "10001:10001", "/var/tempo"]
+    entrypoint: [ "chown" ]
+    command: [ "-R", "10001:10001", "/var/tempo" ]
     volumes:
       - tempo-wal:/var/tempo/wal
       - tempo-blocks:/var/tempo/blocks
@@ -289,7 +291,7 @@ services:
       - common_network
     depends_on:
       tempo-init:
-          condition: service_completed_successfully
+        condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
     healthcheck:
