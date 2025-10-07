@@ -231,7 +231,7 @@ services:
       GF_SERVER_ROOT_URL: https://grafana.${DOMAIN}/
       GF_INSTALL_PLUGINS: grafana-pyroscope-datasource
       HTTP_PROXY: http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
-      HTTPS_PROXY: https://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
+      HTTPS_PROXY: http://${GRAFANA_PROXY_USER}:${GRAFANA_PROXY_PASSWORD}@${GRAFANA_PROXY_HOST}:${GRAFANA_PROXY_PORT}
       NO_PROXY: localhost,127.0.0.1,prometheus,loki,tempo,api
     volumes:
       - grafana-data:/var/lib/grafana
