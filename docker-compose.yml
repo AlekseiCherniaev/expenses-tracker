@@ -236,6 +236,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./configs/grafana-dashboards:/etc/grafana/provisioning/dashboards
     networks:
       - common_network
     depends_on:
