@@ -1,0 +1,81 @@
+{
+  "id": null,
+  "title": "Redis Dashboard",
+  "uid": "redis-metrics",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Redis Commands",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "expr": "sum(redis_commands_total)", "legendFormat": "Commands" }]
+    },
+    {
+      "type": "stat",
+      "title": "95th Command Duration (ms)",
+      "id": 2,
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(redis_commands_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Connected Clients",
+      "id": 3,
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "expr": "redis_connected_clients", "legendFormat": "Clients" }]
+    },
+    {
+      "type": "stat",
+      "title": "Keyspace Size",
+      "id": 4,
+      "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
+      "targets": [{ "expr": "sum(redis_keyspace_keys)", "legendFormat": "Keys" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Commands per second (by type)",
+      "id": 5,
+      "gridPos": { "x": 4, "y": 4, "w": 8, "h": 6 },
+      "targets": [{ "expr": "sum(rate(redis_commands_total[1m])) by (cmd)", "legendFormat": "{{cmd}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Command Latency (p50/p95/p99)",
+      "id": 6,
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(redis_commands_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(redis_commands_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(redis_commands_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Slow Redis Commands",
+      "id": 7,
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "topk(10, sum(rate(redis_commands_duration_seconds_sum[5m])) by (cmd))",
+          "legendFormat": "{{cmd}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage (MB)",
+      "id": 8,
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "targets": [{ "expr": "redis_memory_used_bytes / 1024 / 1024", "legendFormat": "Memory MB" }]
+    }
+  ]
+}
