@@ -1,0 +1,193 @@
+{
+  "id": null,
+  "title": "Application Dashboard",
+  "uid": "app-metrics",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Requests",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "expr": "sum(http_requests_total)", "legendFormat": "Total" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1000 },
+              { "color": "red", "value": 5000 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate %",
+      "id": 2,
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "100 * (sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])))",
+          "legendFormat": "Error %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Requests per second",
+      "id": 3,
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "expr": "sum(rate(http_requests_total[1m]))", "legendFormat": "RPS" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "green", "value": 100 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "95th Latency (ms)",
+      "id": 4,
+      "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 200 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "CPU Usage %",
+      "id": 11,
+      "gridPos": { "x": 4, "y": 4, "w": 4, "h": 4 },
+      "targets": [{ "expr": "100 * rate(process_cpu_seconds_total[1m])", "legendFormat": "CPU %" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Memory Usage (MB)",
+      "id": 12,
+      "gridPos": { "x": 8, "y": 4, "w": 4, "h": 4 },
+      "targets": [{ "expr": "process_resident_memory_bytes / 1024 / 1024", "legendFormat": "Memory MB" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "megabytes",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 512 },
+              { "color": "red", "value": 800 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests per second (by method)",
+      "id": 5,
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
+      "targets": [{ "expr": "sum by (method) (rate(http_requests_total[1m]))", "legendFormat": "{{method}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency (p50 / p95 / p99)",
+      "id": 6,
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Endpoints by RPS",
+      "id": 7,
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 6 },
+      "targets": [{ "expr": "topk(10, sum(rate(http_requests_total[5m])) by (endpoint))", "legendFormat": "{{endpoint}}" }]
+    },
+    {
+      "type": "table",
+      "title": "Top Endpoints by Errors",
+      "id": 8,
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 6 },
+      "targets": [{ "expr": "topk(10, sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) by (endpoint))", "legendFormat": "{{endpoint}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency (avg per endpoint)",
+      "id": 9,
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "sum(rate(http_request_duration_seconds_sum[5m])) by (endpoint) / sum(rate(http_request_duration_seconds_count[5m])) by (endpoint)", "legendFormat": "{{endpoint}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Status Codes Distribution",
+      "id": 10,
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "targets": [{ "expr": "sum(rate(http_requests_total[1m])) by (http_status)", "legendFormat": "{{http_status}}" }]
+    }
+  ]
+}
