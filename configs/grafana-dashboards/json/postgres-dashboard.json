@@ -1,0 +1,117 @@
+{
+  "id": null,
+  "title": "PostgreSQL / SQLAlchemy Dashboard",
+  "uid": "db-metrics",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total DB Queries",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        { "expr": "sum(db_query_total)", "legendFormat": "Queries" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "DB Error Rate %",
+      "id": 2,
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "100 * (sum(rate(db_query_total{status=\"error\"}[5m])) / sum(rate(db_query_total[5m])))",
+          "legendFormat": "Error %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "95th Query Duration (ms)",
+      "id": 3,
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "DB Queries per second",
+      "id": 4,
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "sum(rate(db_query_total[1m])) by (statement_type)", "legendFormat": "{{statement_type}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Query Latency (p50 / p95 / p99)",
+      "id": 5,
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Slow Queries",
+      "id": 6,
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "topk(10, sum(rate(db_query_duration_seconds_sum[5m])) by (query))",
+          "legendFormat": "{{query}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Connection Pool Usage",
+      "id": 7,
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "sqlalchemy_connection_pool_inuse", "legendFormat": "In use" },
+        { "expr": "sqlalchemy_connection_pool_size", "legendFormat": "Pool size" }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Query Count by Type",
+      "id": 8,
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(db_query_total[5m])) by (statement_type)",
+          "legendFormat": "{{statement_type}}"
+        }
+      ]
+    }
+  ]
+}

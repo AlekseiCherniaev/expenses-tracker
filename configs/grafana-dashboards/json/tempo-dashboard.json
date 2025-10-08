@@ -1,0 +1,81 @@
+{
+  "id": null,
+  "title": "Tempo / Tracing Dashboard",
+  "uid": "tempo-traces",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 }
+    },
+    {
+      "type": "nodeGraph",
+      "title": "Service Map",
+      "id": 2,
+      "gridPos": { "x": 0, "y": 1, "w": 24, "h": 10 },
+"targets": [
+  {
+    "datasource": { "type": "tempo", "uid": "tempo" },
+    "queryType": "serviceMap"
+  }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Slow Traces (p95 latency)",
+      "id": 3,
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "topk(10, histogram_quantile(0.95, sum(rate(tempo_spanmetrics_latency_bucket[5m])) by (service_name, le)))",
+          "legendFormat": "{{service_name}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Spans per Service",
+      "id": 4,
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(tempo_spanmetrics_spans_total[1m])) by (service_name)",
+          "legendFormat": "{{service_name}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "DB vs Redis vs API Time Breakdown",
+      "id": 5,
+      "gridPos": { "x": 0, "y": 17, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(tempo_spanmetrics_latency_sum[5m])) by (span_kind, service_name)",
+          "legendFormat": "{{service_name}}:{{span_kind}}"
+        }
+      ]
+    },
+    {
+      "type": "nodeGraph",
+      "title": "Search Trace by ID",
+      "id": 6,
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "queryType": "traceByID",
+          "query": "$TraceID"
+        }
+      ]
+    }
+  ]
+}
