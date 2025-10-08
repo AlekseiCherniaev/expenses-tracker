@@ -1,0 +1,91 @@
+{
+  "id": null,
+  "uid": "loki-logs",
+  "title": "Loki / Application Logs",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 2,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Errors & Exceptions",
+      "id": 10,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "Recent Error Logs",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 1, "w": 24, "h": 9 },
+      "targets": [
+        {
+          "expr": "{service=\"api\", level=\"error\"}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "View trace in Tempo",
+              "url": "/explore?left={\"datasource\":\"tempo\",\"queries\":[{\"query\":\"$${__value.raw}\"}],\"range\":{\"from\":\"now-15m\",\"to\":\"now\"}}",
+              "internal": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Request Logs & Live Stream",
+      "id": 11,
+      "gridPos": { "x": 0, "y": 10, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "HTTP Access Logs (api container)",
+      "id": 2,
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "{container=\"api\"} |~ `\"GET\"|\"POST\"|\"PUT\"|\"DELETE\"`",
+          "refId": "B"
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      }
+    },
+    {
+      "type": "logs",
+      "title": "All Logs (Live Tail)",
+      "id": 3,
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "{service=\"api\"}",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "liveStreaming": true
+      }
+    }
+  ]
+}
