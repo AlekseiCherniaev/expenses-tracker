@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: 'application-dashboards'
+    orgId: 1
+    folder: 'Applications'
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
+      foldersFromFilesStructure: true
