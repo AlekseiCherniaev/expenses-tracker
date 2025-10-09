@@ -18,11 +18,11 @@
       "title": "Service Map",
       "id": 2,
       "gridPos": { "x": 0, "y": 1, "w": 24, "h": 10 },
-"targets": [
-  {
-    "datasource": { "type": "tempo", "uid": "tempo" },
-    "queryType": "serviceMap"
-  }
+      "targets": [
+        {
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "queryType": "serviceMap"
+        }
       ]
     },
     {
