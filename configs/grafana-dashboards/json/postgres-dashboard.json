@@ -13,7 +13,11 @@
       "id": 1,
       "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
       "targets": [
-        { "expr": "sum(db_query_total)", "legendFormat": "Queries" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(db_query_total)",
+          "legendFormat": "Queries"
+        }
       ]
     },
     {
@@ -23,6 +27,7 @@
       "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "100 * (sum(rate(db_query_total{status=\"error\"}[5m])) / sum(rate(db_query_total[5m])))",
           "legendFormat": "Error %"
         }
@@ -49,6 +54,7 @@
       "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000",
           "legendFormat": "p95"
         }
@@ -65,7 +71,11 @@
       "id": 4,
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
       "targets": [
-        { "expr": "sum(rate(db_query_total[1m])) by (statement_type)", "legendFormat": "{{statement_type}}" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(db_query_total[1m])) by (statement_type)",
+          "legendFormat": "{{statement_type}}"
+        }
       ]
     },
     {
@@ -74,9 +84,21 @@
       "id": 5,
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
       "targets": [
-        { "expr": "histogram_quantile(0.5, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.5, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p99"
+        }
       ]
     },
     {
@@ -86,6 +108,7 @@
       "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "topk(10, sum(rate(db_query_duration_seconds_sum[5m])) by (query))",
           "legendFormat": "{{query}}"
         }
@@ -97,8 +120,16 @@
       "id": 7,
       "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
       "targets": [
-        { "expr": "sqlalchemy_connection_pool_inuse", "legendFormat": "In use" },
-        { "expr": "sqlalchemy_connection_pool_size", "legendFormat": "Pool size" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sqlalchemy_connection_pool_inuse",
+          "legendFormat": "In use"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sqlalchemy_connection_pool_size",
+          "legendFormat": "Pool size"
+        }
       ]
     },
     {
@@ -108,6 +139,7 @@
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "sum(rate(db_query_total[5m])) by (statement_type)",
           "legendFormat": "{{statement_type}}"
         }
