@@ -12,7 +12,13 @@
       "title": "Total Requests",
       "id": 1,
       "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
-      "targets": [{ "expr": "sum(http_requests_total)", "legendFormat": "Total" }],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(http_requests_total)",
+          "legendFormat": "Total"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -34,6 +40,7 @@
       "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "100 * (sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])))",
           "legendFormat": "Error %"
         }
@@ -58,7 +65,13 @@
       "title": "Requests per second",
       "id": 3,
       "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
-      "targets": [{ "expr": "sum(rate(http_requests_total[1m]))", "legendFormat": "RPS" }],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "RPS"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -80,6 +93,7 @@
       "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
       "targets": [
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000",
           "legendFormat": "p95"
         }
@@ -104,7 +118,13 @@
       "title": "CPU Usage %",
       "id": 11,
       "gridPos": { "x": 4, "y": 4, "w": 4, "h": 4 },
-      "targets": [{ "expr": "100 * rate(process_cpu_seconds_total[1m])", "legendFormat": "CPU %" }],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "100 * rate(process_cpu_seconds_total[1m])",
+          "legendFormat": "CPU %"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -125,7 +145,13 @@
       "title": "Memory Usage (MB)",
       "id": 12,
       "gridPos": { "x": 8, "y": 4, "w": 4, "h": 4 },
-      "targets": [{ "expr": "process_resident_memory_bytes / 1024 / 1024", "legendFormat": "Memory MB" }],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "legendFormat": "Memory MB"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "megabytes",
@@ -146,7 +172,13 @@
       "title": "Requests per second (by method)",
       "id": 5,
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
-      "targets": [{ "expr": "sum by (method) (rate(http_requests_total[1m]))", "legendFormat": "{{method}}" }]
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (method) (rate(http_requests_total[1m]))",
+          "legendFormat": "{{method}}"
+        }
+      ]
     },
     {
       "type": "timeseries",
@@ -154,9 +186,21 @@
       "id": 6,
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
       "targets": [
-        { "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
       ]
     },
     {
@@ -164,14 +208,26 @@
       "title": "Top Endpoints by RPS",
       "id": 7,
       "gridPos": { "x": 0, "y": 14, "w": 12, "h": 6 },
-      "targets": [{ "expr": "topk(10, sum(rate(http_requests_total[5m])) by (endpoint))", "legendFormat": "{{endpoint}}" }]
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "topk(10, sum(rate(http_requests_total[5m])) by (endpoint))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
     },
     {
       "type": "table",
       "title": "Top Endpoints by Errors",
       "id": 8,
       "gridPos": { "x": 12, "y": 14, "w": 12, "h": 6 },
-      "targets": [{ "expr": "topk(10, sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) by (endpoint))", "legendFormat": "{{endpoint}}" }]
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "topk(10, sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) by (endpoint))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
     },
     {
       "type": "timeseries",
@@ -179,7 +235,11 @@
       "id": 9,
       "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
       "targets": [
-        { "expr": "sum(rate(http_request_duration_seconds_sum[5m])) by (endpoint) / sum(rate(http_request_duration_seconds_count[5m])) by (endpoint)", "legendFormat": "{{endpoint}}" }
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_request_duration_seconds_sum[5m])) by (endpoint) / sum(rate(http_request_duration_seconds_count[5m])) by (endpoint)",
+          "legendFormat": "{{endpoint}}"
+        }
       ]
     },
     {
@@ -187,7 +247,13 @@
       "title": "HTTP Status Codes Distribution",
       "id": 10,
       "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
-      "targets": [{ "expr": "sum(rate(http_requests_total[1m])) by (http_status)", "legendFormat": "{{http_status}}" }]
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_requests_total[1m])) by (http_status)",
+          "legendFormat": "{{http_status}}"
+        }
+      ]
     }
   ]
 }
