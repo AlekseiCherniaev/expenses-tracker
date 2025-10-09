@@ -121,10 +121,19 @@ It provides a backend setup with OAuth2 authentication, tracing, profiling, cach
 
 ### Main Application Screens
 
+<img width="1920" height="868" alt="image" src="https://github.com/user-attachments/assets/cdfd00e5-2dcc-4876-83e2-c2c78b1f7a20" />
 
+---
+
+<img width="1920" height="868" alt="image" src="https://github.com/user-attachments/assets/bc8fa36e-ca42-43be-aed0-a7e5b89f0d80" />
+
+---
+
+<img width="1920" height="868" alt="image" src="https://github.com/user-attachments/assets/99c0f477-927b-48ed-9b74-37c924eb40b6" />
 
 ---
 
 ### Grafana Dashboards
 
+<img width="1920" height="868" alt="image" src="https://github.com/user-attachments/assets/4757e50c-11e0-4a1d-97d2-f164b45f3479" />
 
