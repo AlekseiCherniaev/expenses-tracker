@@ -1,13 +1,13 @@
 services:
   api:
     image: ${DOCKERHUB_USERNAME}/expenses_tracker:latest
-    container_name: api
+    container_name: tracker-api
     expose:
       - 8000
     env_file:
       - .env
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,7 +25,7 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    container_name: postgres
+    container_name: tracker-postgres
     ports:
       - "${POSTGRES_PORT}:5432"
     env_file:
@@ -33,7 +33,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
     networks:
-      - common_network
+      - tracker_common_network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 30s
@@ -53,7 +53,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: minio
+    container_name: tracker-minio
     command: server /data --console-address ":9001"
     expose:
       - 9000
@@ -63,7 +63,7 @@ services:
     volumes:
       - minio-data:/data
     networks:
-      - common_network
+      - tracker_common_network
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
@@ -83,11 +83,11 @@ services:
 
   minio-init:
     image: minio/mc:latest
-    container_name: minio_init
+    container_name: tracker-minio-init
     env_file:
       - .env
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       minio:
         condition: service_healthy
@@ -101,7 +101,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
+    container_name: tracker-redis
     command: [ "redis-server", "--appendonly", "yes" ]
     expose:
       - 6379
@@ -110,7 +110,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - common_network
+      - tracker_common_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
@@ -130,87 +130,25 @@ services:
 
   migrations:
     build: .
-    container_name: migrations
+    container_name: tracker-migrations
     command: [ "/app/.venv/bin/alembic", "upgrade", "head" ]
     env_file:
       - .env
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       postgres:
         condition: service_healthy
 
-  nginx:
-    image: ${DOCKERHUB_USERNAME}/expenses_frontend:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - ./certbot-www:/var/www/certbot
-      - /etc/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
-    networks:
-      - common_network
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    env_file:
-      - .env
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-    command: [
-      "certonly",
-      "--standalone",
-      "--preferred-challenges", "http",
-      "--email=${CERTBOT_EMAIL}",
-      "--agree-tos",
-      "--no-eff-email",
-      "-d", "${DOMAIN}",
-      "-d", "www.${DOMAIN}",
-      "-d", "storage.${DOMAIN}",
-      "-d", "grafana.${DOMAIN}",
-      "-d", "prometheus.${DOMAIN}",
-      "--expand"
-    ]
-
-  certbot-renew:
-    build:
-      context: .
-      dockerfile: Dockerfile.certbot-renew
-    container_name: certbot_renew
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - ./certbot-www:/var/www/certbot
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - common_network
-    entrypoint: sh -c "while :; do certbot renew --webroot -w /var/www/certbot && docker exec nginx nginx -s reload; sleep 12h; done"
-    restart: unless-stopped
-
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: tracker-prometheus
     expose:
       - 9090
     volumes:
       - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       api:
         condition: service_healthy
@@ -222,7 +160,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    container_name: tracker-grafana
     env_file:
       - .env
     expose:
@@ -238,7 +176,7 @@ services:
       - ./configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./configs/grafana-dashboards:/etc/grafana/provisioning/dashboards
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       prometheus:
         condition: service_healthy
@@ -256,7 +194,7 @@ services:
 
   loki:
     image: grafana/loki:2.9.2
-    container_name: loki
+    container_name: tracker-loki
     expose:
       - 3100
     command: -config.file=/etc/loki/local-config.yaml
@@ -267,7 +205,7 @@ services:
       - ./configs/loki.yaml:/etc/loki/local-config.yaml
       - loki-data:/loki
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       minio-init:
         condition: service_completed_successfully
@@ -279,7 +217,7 @@ services:
 
   promtail:
     image: grafana/promtail:2.9.2
-    container_name: promtail
+    container_name: tracker-promtail
     expose:
       - 9080
     command: -config.file=/etc/promtail/config.yml
@@ -290,14 +228,14 @@ services:
       - ./configs/promtail.yaml:/etc/promtail/config.yml
       - promtail-positions:/tmp
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       loki:
         condition: service_healthy
 
   tempo:
     image: grafana/tempo:latest
-    container_name: tempo
+    container_name: tracker-tempo
     command: -config.file=/etc/tempo.yaml
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
@@ -307,14 +245,12 @@ services:
       - tempo-wal:/var/tempo/wal
       - tempo-blocks:/var/tempo/blocks
       - tempo-generator:/var/tempo/generator
-    ports:
-      - "3200:3200"
     expose:
       - 3200
       - 4317
       - 4318
     networks:
-      - common_network
+      - tracker_common_network
     depends_on:
       tempo-init:
         condition: service_completed_successfully
@@ -322,8 +258,8 @@ services:
         condition: service_completed_successfully
 
   tempo-init:
-    image: grafana/tempo:latest
-    container_name: tempo_init
+    image: alpine:latest
+    container_name: tracker-tempo-init
     user: root
     entrypoint: [ "chown" ]
     command: [ "-R", "10001:10001", "/var/tempo" ]
@@ -332,12 +268,12 @@ services:
       - tempo-blocks:/var/tempo/blocks
       - tempo-generator:/var/tempo/generator
     networks:
-      - common_network
+      - tracker_common_network
 
 networks:
-  common_network:
-    name: common_network
-    driver: bridge
+  tracker_common_network:
+    external: true
+    name: tracker_common_network
 
 volumes:
   minio-data:
@@ -345,8 +281,6 @@ volumes:
   postgres:
     driver: local
     name: expenses_postgres_data
-  certbot-etc:
-  certbot-var:
   grafana-data:
   loki-data:
   promtail-positions:
