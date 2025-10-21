@@ -52,7 +52,7 @@ async def redis_client(redis_container):
         redis_container["dsn"], encoding="utf-8", decode_responses=True
     )
     yield client
-    await client.close()
+    await client.aclose()
 
 
 @fixture(scope="session")
