@@ -7,7 +7,7 @@ It provides a backend setup with OAuth2 authentication, tracing, profiling, cach
 **[https://expenses-tracker.online](https://expenses-tracker.online)**
 
 **Frontend Repository**: The React-based frontend is available at:  
-**[https://github.com/AlekseiCherniaev/expences_tracker_front](https://github.com/AlekseiCherniaev/expences_tracker_front)**
+**[https://github.com/AlekseiCherniaev/expences-tracker-frontend](https://github.com/AlekseiCherniaev/expences-tracker-frontend)**
 
 ---
 
