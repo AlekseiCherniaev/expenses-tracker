@@ -38,6 +38,7 @@ It provides a backend setup with OAuth2 authentication, tracing, profiling, cach
   - Database migrations are automatically applied after deployment (`alembic upgrade head`)
 - **Nginx** Configuration with:
   - **SSL/TLS termination** — with Let's Encrypt certificates
+  - **HTTP2 support** — improves performance
   - **Rate limiting** — (5 requests/second per IP for API endpoints)
   - **Security headers** — (HSTS, CSP, X-Frame-Options, etc.)
   - **Static file caching** — with optimized expiration headers
