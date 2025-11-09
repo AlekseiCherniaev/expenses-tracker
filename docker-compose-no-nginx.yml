@@ -128,6 +128,19 @@ services:
     cpus: 0.1
     restart: unless-stopped
 
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight
+    networks:
+      - tracker_common_network
+    depends_on:
+      - redis
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis-insight:/data
+    restart: always
+
   migrations:
     build: .
     container_name: tracker-migrations
@@ -287,3 +300,4 @@ volumes:
   tempo-wal:
   tempo-blocks:
   tempo-generator:
+  redis-insight:
