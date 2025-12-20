@@ -3,9 +3,6 @@
 A **expense management system** built with **FastAPI**, designed following **Clean Architecture** principles and a full **observability stack**.  
 It provides a backend setup with OAuth2 authentication, tracing, profiling, caching, and modular domain-driven structure.
 
-**Fully Deployed & Live**: The entire infrastructure is deployed on **Yandex Cloud** using Docker Compose, including both backend and frontend services. You can explore the live application at:  
-**[https://expenses-tracker.online](https://expenses-tracker.online)**
-
 **Frontend Repository**: The React-based frontend is available at:  
 **[https://github.com/AlekseiCherniaev/expences-tracker-frontend](https://github.com/AlekseiCherniaev/expences-tracker-frontend)**
 
